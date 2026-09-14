@@ -1,4 +1,4 @@
-// Package main provides the entry point for the decider CLI.
+// Package main provides the entry point for the adr CLI.
 package main
 
 import (
@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/sventorben/decider/internal/cli"
+	"github.com/averyfreeman/adr-repo-governance/internal/cli"
 )
 
 // Version information, set via ldflags at build time.
@@ -40,8 +40,8 @@ func main() {
 		runShow(os.Args[2:])
 	case "check":
 		runCheck(os.Args[2:])
-	case "explain":
-		runExplain(os.Args[2:])
+	case "bs-detector":
+		runBSDetector(os.Args[2:])
 	case "version":
 		printVersion()
 	case "help", "-h", "--help":
@@ -54,10 +54,10 @@ func main() {
 }
 
 func printUsage() {
-	fmt.Println(`decider - Git-native ADR management
+	fmt.Println(`adr-rg - Git-native ADR governance
 
 Usage:
-  decider <command> [options]
+  adr <command> [options]
 
 Commands:
   init          Initialize ADR directory structure
@@ -65,16 +65,16 @@ Commands:
   index         Generate/update the ADR index
   list          List ADRs with optional filters
   show          Display details of an ADR
-  check         Validate ADRs or check diff applicability
-  explain       Explain why ADRs apply to changed files
+  check         Validate ADRs
+  bs-detector   Detect ADRs relevant to changed files
   version       Show version information
   help          Show this help message
 
-Run 'decider <command> -h' for more information on a command.`)
+Run 'adr <command> -h' for more information on a command.`)
 }
 
 func printVersion() {
-	fmt.Printf("decider version %s\n", version)
+	fmt.Printf("adr version %s\n", version)
 	fmt.Printf("  commit: %s\n", commit)
 	fmt.Printf("  built:  %s\n", date)
 }
@@ -82,7 +82,7 @@ func printVersion() {
 func runInit(args []string) {
 	fs := flag.NewFlagSet("init", flag.ExitOnError)
 	dir := fs.String("dir", defaultADRDir, "ADR directory path")
-	format := fs.String("format", "text", "Output format (text|toon|json)")
+	format := fs.String("format", "text", "Output format (text|json)")
 	if err := fs.Parse(args); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
@@ -112,10 +112,10 @@ func runNew(args []string) {
 	paths := fs.String("paths", "", "Comma-separated scope paths (globs)")
 	status := fs.String("status", "proposed", "Initial status")
 	noIndex := fs.Bool("no-index", false, "Skip updating index")
-	format := fs.String("format", "text", "Output format (text|toon|json)")
+	format := fs.String("format", "text", "Output format (text|json)")
 
 	fs.Usage = func() {
-		fmt.Println("Usage: decider new [options] <title>")
+		fmt.Println("Usage: adr new [options] <title>")
 		fmt.Println()
 		fmt.Println("Create a new ADR with the given title.")
 		fmt.Println()
@@ -177,13 +177,13 @@ func runIndex(args []string) {
 	fs := flag.NewFlagSet("index", flag.ExitOnError)
 	dir := fs.String("dir", defaultADRDir, "ADR directory path")
 	check := fs.Bool("check", false, "Check if index is up-to-date (don't modify)")
-	format := fs.String("format", "text", "Output format (text|toon|json|yaml)")
+	format := fs.String("format", "text", "Output format (text|json|yaml)")
 	if err := fs.Parse(args); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 
-	outputFormat, err := cli.ParseOutputFormat(*format)
+	outputFormat, err := cli.ParseIndexOutputFormat(*format)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
@@ -212,7 +212,7 @@ func runList(args []string) {
 	status := fs.String("status", "", "Filter by status")
 	tag := fs.String("tag", "", "Filter by tag")
 	path := fs.String("path", "", "Filter by scope path match")
-	format := fs.String("format", "text", "Output format (text|toon|json)")
+	format := fs.String("format", "text", "Output format (text|json)")
 	if err := fs.Parse(args); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
@@ -247,10 +247,10 @@ func runList(args []string) {
 func runShow(args []string) {
 	fs := flag.NewFlagSet("show", flag.ExitOnError)
 	dir := fs.String("dir", defaultADRDir, "ADR directory path")
-	format := fs.String("format", "text", "Output format (text|toon|json)")
+	format := fs.String("format", "text", "Output format (text|json)")
 
 	fs.Usage = func() {
-		fmt.Println("Usage: decider show [options] <ADR-ID|number|filename>")
+		fmt.Println("Usage: adr show [options] <ADR-ID|number|filename>")
 		fmt.Println()
 		fmt.Println("Display details of a specific ADR.")
 		fmt.Println()
@@ -290,11 +290,10 @@ func runShow(args []string) {
 
 func runCheck(args []string) {
 	if len(args) < 1 {
-		fmt.Fprintln(os.Stderr, "Usage: decider check <adr|diff> [options]")
+		fmt.Fprintln(os.Stderr, "Usage: adr check adr [options]")
 		fmt.Fprintln(os.Stderr, "")
 		fmt.Fprintln(os.Stderr, "Subcommands:")
-		fmt.Fprintln(os.Stderr, "  adr     Validate ADR files")
-		fmt.Fprintln(os.Stderr, "  diff    Find ADRs applicable to git diff")
+		fmt.Fprintln(os.Stderr, "  adr       Validate ADR files")
 		os.Exit(1)
 	}
 
@@ -303,8 +302,6 @@ func runCheck(args []string) {
 	switch subCmd {
 	case "adr":
 		runCheckADR(args[1:])
-	case "diff":
-		runCheckDiff(args[1:])
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown check subcommand: %s\n", subCmd)
 		os.Exit(1)
@@ -315,7 +312,7 @@ func runCheckADR(args []string) {
 	fs := flag.NewFlagSet("check adr", flag.ExitOnError)
 	dir := fs.String("dir", defaultADRDir, "ADR directory path")
 	strict := fs.Bool("strict", false, "Treat warnings as errors (fail on missing rationale pattern)")
-	format := fs.String("format", "text", "Output format (text|toon|json)")
+	format := fs.String("format", "text", "Output format (text|json)")
 	if err := fs.Parse(args); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
@@ -345,16 +342,16 @@ func runCheckADR(args []string) {
 	}
 }
 
-func runCheckDiff(args []string) {
-	fs := flag.NewFlagSet("check diff", flag.ExitOnError)
+func runBSDetector(args []string) {
+	fs := flag.NewFlagSet("bs-detector", flag.ExitOnError)
 	dir := fs.String("dir", defaultADRDir, "ADR directory path")
 	base := fs.String("base", "", "Base ref for git diff (required)")
-	format := fs.String("format", "text", "Output format (text|toon|json)")
+	format := fs.String("format", "text", "Output format (text|json)")
 
 	fs.Usage = func() {
-		fmt.Println("Usage: decider check diff --base <ref> [options]")
+		fmt.Println("Usage: adr bs-detector --base <ref> [options]")
 		fmt.Println()
-		fmt.Println("Find ADRs applicable to files changed since <base>.")
+		fmt.Println("Detect ADRs whose documented scope overlaps files changed since <base>.")
 		fmt.Println()
 		fmt.Println("Options:")
 		fs.PrintDefaults()
@@ -377,59 +374,14 @@ func runCheckDiff(args []string) {
 		os.Exit(1)
 	}
 
-	cfg := &cli.CheckDiffConfig{
+	cfg := &cli.BSDetectorConfig{
 		Dir:    *dir,
 		Base:   *base,
 		Format: outputFormat,
 		Output: cli.NewOutput(outputFormat),
 	}
 
-	if _, err := cli.RunCheckDiff(cfg); err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(1)
-	}
-}
-
-func runExplain(args []string) {
-	fs := flag.NewFlagSet("explain", flag.ExitOnError)
-	dir := fs.String("dir", defaultADRDir, "ADR directory path")
-	base := fs.String("base", "", "Base ref for git diff (required)")
-	format := fs.String("format", "text", "Output format (text|toon|json)")
-
-	fs.Usage = func() {
-		fmt.Println("Usage: decider explain --base <ref> [options]")
-		fmt.Println()
-		fmt.Println("Explain why ADRs apply to files changed since <base>.")
-		fmt.Println()
-		fmt.Println("Options:")
-		fs.PrintDefaults()
-	}
-
-	if err := fs.Parse(args); err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(1)
-	}
-
-	if *base == "" {
-		fmt.Fprintln(os.Stderr, "error: --base is required")
-		fs.Usage()
-		os.Exit(1)
-	}
-
-	outputFormat, err := cli.ParseOutputFormat(*format)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "error: %v\n", err)
-		os.Exit(1)
-	}
-
-	cfg := &cli.ExplainConfig{
-		Dir:    *dir,
-		Base:   *base,
-		Format: outputFormat,
-		Output: cli.NewOutput(outputFormat),
-	}
-
-	if _, err := cli.RunExplain(cfg); err != nil {
+	if _, err := cli.RunBSDetector(cfg); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}

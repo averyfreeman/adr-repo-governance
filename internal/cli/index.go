@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/sventorben/decider/internal/index"
+	"github.com/averyfreeman/adr-repo-governance/internal/index"
 	"gopkg.in/yaml.v3"
 )
 
@@ -41,13 +41,13 @@ func RunIndex(cfg *IndexConfig) (*IndexResult, error) {
 			File:      indexPath,
 		}
 
-		if cfg.Format == FormatTOON || cfg.Format == FormatJSON {
+		if cfg.Output.IsStructuredFormat() {
 			_ = cfg.Output.PrintStructured(result)
 		} else {
 			if upToDate {
 				cfg.Output.Success("Index is up-to-date: %s", indexPath)
 			} else {
-				cfg.Output.Error("Index is out of date. Run 'decider index' to update.")
+				cfg.Output.Error("Index is out of date. Run 'adr index' to update.")
 				return result, fmt.Errorf("index out of date")
 			}
 		}
@@ -72,8 +72,6 @@ func RunIndex(cfg *IndexConfig) (*IndexResult, error) {
 	}
 
 	switch cfg.Format {
-	case FormatTOON:
-		_ = cfg.Output.PrintTOON(result)
 	case FormatJSON:
 		_ = cfg.Output.PrintJSON(result)
 	case FormatYAML:

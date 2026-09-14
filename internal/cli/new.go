@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/sventorben/decider/internal/adr"
-	"github.com/sventorben/decider/internal/index"
-	"github.com/sventorben/decider/internal/validate"
+	"github.com/averyfreeman/adr-repo-governance/internal/adr"
+	"github.com/averyfreeman/adr-repo-governance/internal/index"
+	"github.com/averyfreeman/adr-repo-governance/internal/validate"
 )
 
 // NewConfig holds configuration for the new command.
@@ -112,7 +112,7 @@ func RunNew(cfg *NewConfig) (*NewResult, error) {
 	}
 
 	// Output result
-	if cfg.Format == FormatTOON || cfg.Format == FormatJSON {
+	if cfg.Output.IsStructuredFormat() {
 		_ = cfg.Output.PrintStructured(result)
 	} else {
 		cfg.Output.Success("Created %s", filePath)

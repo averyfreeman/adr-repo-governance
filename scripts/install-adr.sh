@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Install decider CLI from GitHub Releases with checksum verification.
-# Installs to ./tools/decider/ (repo-local).
+# Install the adr CLI from GitHub Releases with checksum verification.
+# Installs to ./tools/adr/ (repo-local).
 
 set -euo pipefail
 
-REPO="sventorben/decider"
-INSTALL_DIR="${INSTALL_DIR:-./tools/decider}"
-VERSION_FILE="${VERSION_FILE:-./tools/decider.version}"
+REPO="averyfreeman/adr-repo-governance"
+INSTALL_DIR="${INSTALL_DIR:-./tools/adr}"
+VERSION_FILE="${VERSION_FILE:-./tools/adr.version}"
 
 # Read pinned version
 if [[ ! -f "$VERSION_FILE" ]]; then
@@ -43,13 +43,13 @@ esac
 
 # Build artifact names
 VERSION_NUM="${VERSION#v}"
-ARCHIVE_NAME="decider_${VERSION_NUM}_${OS}_${ARCH}.tar.gz"
+ARCHIVE_NAME="adr_${VERSION_NUM}_${OS}_${ARCH}.tar.gz"
 CHECKSUMS_NAME="checksums.txt"
 BASE_URL="https://github.com/${REPO}/releases/download/${VERSION}"
 ARCHIVE_URL="${BASE_URL}/${ARCHIVE_NAME}"
 CHECKSUMS_URL="${BASE_URL}/${CHECKSUMS_NAME}"
 
-echo "Installing decider ${VERSION} for ${OS}/${ARCH}..."
+echo "Installing adr-rg ${VERSION} for ${OS}/${ARCH}..."
 echo "  Archive: ${ARCHIVE_URL}"
 
 # Create temp directory
@@ -102,12 +102,12 @@ tar -xzf "$ARCHIVE_NAME"
 
 cd - > /dev/null
 mkdir -p "$INSTALL_DIR"
-mv "$TMPDIR/decider" "$INSTALL_DIR/decider"
-chmod +x "$INSTALL_DIR/decider"
+mv "$TMPDIR/adr" "$INSTALL_DIR/adr"
+chmod +x "$INSTALL_DIR/adr"
 
-echo "Installed to: $INSTALL_DIR/decider"
+echo "Installed to: $INSTALL_DIR/adr"
 echo ""
 echo "Add to PATH with:"
 echo "  export PATH=\"\$PWD/$INSTALL_DIR:\$PATH\""
 echo ""
-"$INSTALL_DIR/decider" version
+"$INSTALL_DIR/adr" version

@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/sventorben/decider/internal/validate"
+	"github.com/averyfreeman/adr-repo-governance/internal/validate"
 )
 
 var adrFilenameRegex = regexp.MustCompile(`^(\d{4})-.*\.md$`)

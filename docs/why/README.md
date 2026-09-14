@@ -1,56 +1,37 @@
-# Why DECIDER?
+# Why adr-rg?
 
-This section explains the philosophy behind DECIDER and why treating architectural decisions as structured, machine-readable artifacts matters.
+Important decisions tend to get scattered across pull requests, chat threads,
+and people’s memory. adr-rg gives them a small, repository-native home:
+Markdown for people, YAML metadata for tools, and Git history for context.
 
-## Essays
+## Structure that pays rent
 
-- [Decisions as Code](decisions-as-code.md) - Why architectural decisions deserve the same rigor as source code
-- [Decisions as Constraints](decisions-as-constraints.md) - How ADRs become enforceable rules, not just documentation
-- [Shared Context Beats Bigger Models](shared-context-beats-bigger-models.md) - Why externalized context matters more than model capability
-- [AI Agents Need Constraints](ai-agents-need-constraints.md) - How structure helps AI coding agents make better decisions
+An ADR becomes more useful when it says not only what was chosen, but where the
+choice applies and what later work must preserve.
 
-## The Core Insight
+- Stable IDs make decisions easy to cite.
+- Status and supersession links preserve lifecycle history.
+- Scope paths connect a record to the code it governs.
+- Constraints and invariants expose the durable implications.
+- A generated index makes the decision set discoverable.
+- Required sections keep the record understandable.
 
-Software architecture isn't about the code you write today. It's about the constraints that shape every future change.
+## Shared context, less rediscovery
 
-Most teams document decisions in wikis, Confluence pages, or meeting notes. These documents:
+People and coding tools can query a bounded slice of repository context:
 
-- Get stale as the codebase evolves
-- Aren't connected to the code they govern
-- Can't be queried programmatically
-- Don't help AI agents understand your architecture
+~~~bash
+adr list --path "src/db/users.go"
+adr show ADR-0001
+adr bs-detector --base main --format json
+~~~
 
-DECIDER changes this by treating decisions as code:
+The result is a better starting point, not an architecture oracle. The caller
+still reads the decision, weighs the trade-offs, and reviews the code.
 
-```
-Decisions → Constraints → Scope → Enforcement → Learning
-```
+## Keep it proportional
 
-1. **Decisions** are documented in ADRs with structured metadata
-2. **Constraints** define rules that must be followed
-3. **Scope** specifies which code paths the constraints apply to
-4. **Enforcement** happens through CI and human review
-5. **Learning** improves the process over time
-
-## What Makes DECIDER Different
-
-| Traditional ADRs | DECIDER ADRs |
-|-----------------|--------------|
-| Free-form markdown | Structured YAML frontmatter |
-| No tooling | CLI for creation, validation, querying |
-| Manual maintenance | Auto-generated index |
-| Human-only consumption | Machine-readable for agents |
-| No scope definition | Glob patterns specify affected code |
-| Static documents | Living system with CI integration |
-
-## The Methodology
-
-DECIDER isn't just a CLI. It's a lightweight methodology:
-
-1. **Document decisions early** - Create ADRs during planning
-2. **Make constraints explicit** - Write rules agents and humans can follow
-3. **Scope decisions tightly** - Use glob patterns to limit applicability
-4. **Validate continuously** - CI checks keep ADRs healthy
-5. **Evolve through supersession** - Don't edit old decisions; create new ones
-
-This creates a living record of your architecture that grows with your codebase.
+Use an ADR for a durable choice, not every implementation detail. Keep scope
+patterns narrow and constraints concrete. adr-rg validates document structure
+and reports applicability; it is not a policy engine or a substitute for tests,
+static analysis, or engineering judgment.

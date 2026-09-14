@@ -15,12 +15,10 @@ func TestParseOutputFormat(t *testing.T) {
 		{"", FormatText, false},
 		{"text", FormatText, false},
 		{"TEXT", FormatText, false},
-		{"toon", FormatTOON, false},
-		{"TOON", FormatTOON, false},
 		{"json", FormatJSON, false},
 		{"JSON", FormatJSON, false},
-		{"yaml", FormatYAML, false},
-		{"YAML", FormatYAML, false},
+		{"yaml", "", true},
+		{"YAML", "", true},
 		{"invalid", "", true},
 		{"xml", "", true},
 	}
@@ -39,10 +37,17 @@ func TestParseOutputFormat(t *testing.T) {
 	}
 }
 
-func TestDefaultStructuredFormat(t *testing.T) {
-	// TOON should be the default structured format
-	if DefaultStructuredFormat != FormatTOON {
-		t.Errorf("DefaultStructuredFormat = %v, want %v", DefaultStructuredFormat, FormatTOON)
+func TestParseIndexOutputFormat(t *testing.T) {
+	for _, input := range []string{"yaml", "YAML"} {
+		t.Run(input, func(t *testing.T) {
+			got, err := ParseIndexOutputFormat(input)
+			if err != nil {
+				t.Fatalf("ParseIndexOutputFormat(%q) failed: %v", input, err)
+			}
+			if got != FormatYAML {
+				t.Errorf("ParseIndexOutputFormat(%q) = %v, want %v", input, got, FormatYAML)
+			}
+		})
 	}
 }
 
@@ -54,11 +59,10 @@ func TestOutputPrintStructured(t *testing.T) {
 
 	tests := []struct {
 		format    OutputFormat
-		checkTOON bool
 		checkJSON bool
 	}{
-		{FormatTOON, true, false},
-		{FormatJSON, false, true},
+		{FormatJSON, true},
+		{FormatYAML, false},
 	}
 
 	for _, tt := range tests {
@@ -87,12 +91,6 @@ func TestOutputPrintStructured(t *testing.T) {
 				}
 			}
 
-			if tt.checkTOON {
-				// TOON should contain expected keys without JSON quotes
-				if !containsStr(result, "name:") || !containsStr(result, "count:") {
-					t.Errorf("TOON output missing expected keys: %s", result)
-				}
-			}
 		})
 	}
 }
@@ -103,7 +101,6 @@ func TestIsStructuredFormat(t *testing.T) {
 		want   bool
 	}{
 		{FormatText, false},
-		{FormatTOON, true},
 		{FormatJSON, true},
 		{FormatYAML, true},
 	}
@@ -116,13 +113,4 @@ func TestIsStructuredFormat(t *testing.T) {
 			}
 		})
 	}
-}
-
-func containsStr(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
 }

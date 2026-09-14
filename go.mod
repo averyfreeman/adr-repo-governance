@@ -1,4 +1,4 @@
-module github.com/sventorben/decider
+module github.com/averyfreeman/adr-repo-governance
 
 go 1.25
 

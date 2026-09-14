@@ -1,6 +1,6 @@
 # Binaries (root level only)
-/decider
-/decider.exe
+/adr
+/adr.exe
 *.exe
 *.exe~
 *.dll
@@ -12,7 +12,7 @@
 /bin/
 
 # Downloaded tools (keep version file, ignore binaries)
-/tools/decider/
+/tools/adr/
 
 # Test artifacts
 *.test

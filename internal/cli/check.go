@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/sventorben/decider/internal/adr"
-	"github.com/sventorben/decider/internal/glob"
-	"github.com/sventorben/decider/internal/validate"
+	"github.com/averyfreeman/adr-repo-governance/internal/adr"
+	"github.com/averyfreeman/adr-repo-governance/internal/glob"
+	"github.com/averyfreeman/adr-repo-governance/internal/validate"
 )
 
 // CheckADRConfig holds configuration for the check adr command.
@@ -103,7 +103,7 @@ func RunCheckADR(cfg *CheckADRConfig) (*CheckADRResult, error) {
 	}
 
 	// Output
-	if cfg.Format == FormatTOON || cfg.Format == FormatJSON {
+	if cfg.Output.IsStructuredFormat() {
 		_ = cfg.Output.PrintStructured(result)
 	} else {
 		hasErrors := len(result.Errors) > 0
@@ -137,16 +137,16 @@ func RunCheckADR(cfg *CheckADRConfig) (*CheckADRResult, error) {
 	return result, nil
 }
 
-// CheckDiffConfig holds configuration for the check diff command.
-type CheckDiffConfig struct {
+// BSDetectorConfig holds configuration for the bs-detector command.
+type BSDetectorConfig struct {
 	Dir    string
 	Base   string
 	Format OutputFormat
 	Output *Output
 }
 
-// CheckDiffResult holds the result of the check diff command.
-type CheckDiffResult struct {
+// BSDetectorResult holds the result of the bs-detector command.
+type BSDetectorResult struct {
 	ChangedFiles   []string           `json:"changed_files"`
 	ApplicableADRs []ApplicableADR    `json:"applicable_adrs"`
 	Summary        ConstraintsSummary `json:"summary"`
@@ -171,12 +171,12 @@ type ConstraintsSummary struct {
 	AllInvariants    []string `json:"all_invariants,omitempty"`
 }
 
-// RunCheckDiff finds ADRs applicable to changed files.
-func RunCheckDiff(cfg *CheckDiffConfig) (*CheckDiffResult, error) {
+// RunBSDetector finds ADRs whose documented scope overlaps changed files.
+func RunBSDetector(cfg *BSDetectorConfig) (*BSDetectorResult, error) {
 	// Get changed files from git
-	changedFiles, err := getGitDiff(cfg.Base)
+	changedFiles, err := getChangedFiles(cfg.Base)
 	if err != nil {
-		return nil, fmt.Errorf("getting git diff: %w", err)
+		return nil, fmt.Errorf("getting changed files: %w", err)
 	}
 
 	// Load all ADRs
@@ -185,12 +185,16 @@ func RunCheckDiff(cfg *CheckDiffConfig) (*CheckDiffResult, error) {
 		return nil, fmt.Errorf("loading ADRs: %w", err)
 	}
 
-	result := &CheckDiffResult{
-		ChangedFiles: changedFiles,
+	result := &BSDetectorResult{
+		ChangedFiles:   changedFiles,
+		ApplicableADRs: make([]ApplicableADR, 0),
 	}
 
 	// Find applicable ADRs
 	for _, a := range adrs {
+		if !isReviewableStatus(a.Frontmatter.Status) {
+			continue
+		}
 		if len(a.Frontmatter.Scope.Paths) == 0 {
 			continue
 		}
@@ -232,9 +236,12 @@ func RunCheckDiff(cfg *CheckDiffConfig) (*CheckDiffResult, error) {
 	}
 
 	// Output
-	if cfg.Format == FormatTOON || cfg.Format == FormatJSON {
+	if cfg.Output.IsStructuredFormat() {
 		_ = cfg.Output.PrintStructured(result)
 	} else {
+		cfg.Output.Println("BS detector: ADR scope applicability")
+		cfg.Output.Println("This identifies decisions to review; it does not prove code compliance.")
+		cfg.Output.Println("")
 		cfg.Output.Println("Changed files: %d", len(changedFiles))
 		cfg.Output.Println("Applicable ADRs: %d", len(result.ApplicableADRs))
 		cfg.Output.Println("")
@@ -270,7 +277,16 @@ func RunCheckDiff(cfg *CheckDiffConfig) (*CheckDiffResult, error) {
 	return result, nil
 }
 
-func getGitDiff(base string) ([]string, error) {
+func isReviewableStatus(status adr.Status) bool {
+	switch status {
+	case adr.StatusProposed, adr.StatusAdopted:
+		return true
+	default:
+		return false
+	}
+}
+
+func getChangedFiles(base string) ([]string, error) {
 	// Validate git ref to prevent injection
 	if err := validate.ValidateGitRef(base); err != nil {
 		return nil, fmt.Errorf("invalid git ref: %w", err)
@@ -282,7 +298,7 @@ func getGitDiff(base string) ([]string, error) {
 		return nil, fmt.Errorf("git diff failed: %w", err)
 	}
 
-	var files []string
+	files := make([]string, 0)
 	for _, line := range strings.Split(string(output), "\n") {
 		line = strings.TrimSpace(line)
 		if line != "" {

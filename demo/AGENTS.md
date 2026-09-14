@@ -1,189 +1,56 @@
-# AGENTS.md — Instructions for AI Coding Agents
+# Demo governance instructions
 
-This document tells AI agents how to work with this demo project.
+This demo uses `adr-rg` to store and validate Architecture Decision Records.
+Use the `adr` command as the repository's governance interface; the tool
+identifies applicable decisions but does not prove semantic code compliance.
 
-## Overview
+## Pre-flight
 
-This demo uses **DECIDER** to manage Architecture Decision Records (ADRs). ADRs document architectural decisions with machine-readable constraints that you MUST follow.
-
-## Install decider (if missing)
-
-If `decider` is not available, install the pinned version:
+Install the pinned demo binary when needed:
 
 ```bash
 # macOS/Linux
-./scripts/install-decider.sh
+./scripts/install-adr.sh
+export PATH="$PWD/tools/adr:$PATH"
 
 # Windows PowerShell
-.\scripts\install-decider.ps1
+.\scripts\install-adr.ps1
+$env:PATH = "$PWD\tools\adr;$env:PATH"
 ```
 
-This installs to `tools/decider/`. Add to PATH:
+Before and after significant changes, validate the ADR set:
 
 ```bash
-export PATH="$PWD/tools/decider:$PATH"
+adr check adr --dir docs/adr --strict
 ```
 
-## Agent Pre-flight (Required)
-
-Before starting significant work, run:
+When source files change, inspect applicable decisions with:
 
 ```bash
-decider check adr --dir docs/adr
+adr bs-detector --dir docs/adr --base origin/main
 ```
 
-When touching ADR system files (`docs/adr/`, templates, index), use strict mode:
+Read the matching ADRs before changing governed code. Treat their constraints
+and invariants as repository requirements, and document a new decision when a
+change cannot follow an existing one.
+
+## Common commands
 
 ```bash
-decider check adr --dir docs/adr --strict
+adr list --dir docs/adr
+adr show --dir docs/adr ADR-0001
+adr list --dir docs/adr --path "src/db/users.go"
+adr list --dir docs/adr --tag database
+adr new --dir docs/adr --tags tag1,tag2 --paths "affected/**" "Your Decision Title"
+adr index --dir docs/adr
+adr index --dir docs/adr --check
 ```
 
-**Stop on violations**: If ADR checks fail, fix the issues before proceeding.
-
-**Re-run before finishing**: After completing work, re-run the check to ensure compliance.
-
-## Before Making Changes
-
-### 1. Query Applicable ADRs
-
-Before modifying code, find which ADRs apply to the files you're changing:
+JSON is the integration format:
 
 ```bash
-decider list --dir docs/adr --path "src/db/users.go"
+adr list --dir docs/adr --format json
 ```
 
-### 2. Read Constraints and Invariants
-
-Each applicable ADR contains:
-- **Constraints**: Rules you MUST follow
-- **Invariants**: Properties that must always be true
-
-Example:
-```
-ADR-0001: Use PostgreSQL for Persistence
-  Constraints:
-    - All database access must go through the repository pattern
-    - Use prepared statements for all queries
-    - Never expose raw SQL outside the db package
-```
-
-### 3. Follow the Rules
-
-Treat constraints as hard requirements. If you're unsure how to comply, ask for clarification.
-
-### 4. Verify Compliance
-
-After making changes, verify compliance:
-
-```bash
-# Find ADRs that apply to your changed files
-decider list --dir docs/adr --path "path/to/changed/file"
-
-# Validate all ADRs are properly formatted
-decider check adr --dir docs/adr --strict
-```
-
-## Demo Project Structure
-
-```
-demo/
-├── AGENTS.md              # This file
-├── CLAUDE.md              # Claude-specific instructions
-├── README.md              # Demo walkthrough
-├── scripts/
-│   ├── install-decider.sh
-│   └── install-decider.ps1
-├── tools/
-│   ├── decider.version    # Pinned version (v0.1.0)
-│   └── decider/           # Installed binary
-├── docs/adr/
-│   ├── README.md          # ADR system overview
-│   ├── index.yaml         # Auto-generated index
-│   ├── templates/adr.md   # ADR template
-│   └── *.md               # Individual ADRs
-└── src/                   # Demo source directories
-```
-
-## ADR Workflow
-
-### Reading ADRs
-
-```bash
-# List all ADRs
-decider list --dir docs/adr
-
-# Show details of a specific ADR
-decider show ADR-0001 --dir docs/adr
-
-# Find ADRs by tag
-decider list --dir docs/adr --tag database
-
-# Find ADRs by scope path
-decider list --dir docs/adr --path "src/db/**"
-```
-
-### Validating ADRs
-
-```bash
-# Basic validation
-decider check adr --dir docs/adr
-
-# Strict validation (includes rationale pattern check)
-decider check adr --dir docs/adr --strict
-```
-
-### Creating ADRs (when needed)
-
-```bash
-decider new "Your Decision Title" --dir docs/adr --tags tag1,tag2 --paths "affected/**"
-```
-
-Then edit the generated file to fill in Context, Decision (with rationale pattern), Alternatives, and Consequences.
-
-## Mandatory Rationale Pattern
-
-All ADRs in this project MUST use this pattern:
-
-### For Adopted Options
-```markdown
-### [Option]: Adopted
-
-**Adopted because:**
-- Concrete reason tied to decision drivers
-
-**Adopted despite:**
-- Known trade-off or downside
-```
-
-### For Rejected Alternatives
-```markdown
-### [Alternative]: Rejected
-
-**Rejected because:**
-- Concrete reason for rejection
-
-**Rejected despite:**
-- Legitimate strength of this option
-```
-
-## Useful Commands
-
-```bash
-# Install decider
-./scripts/install-decider.sh
-
-# Validate all ADRs
-decider check adr --dir docs/adr --strict
-
-# List ADRs
-decider list --dir docs/adr
-
-# Show ADR details
-decider show ADR-0001 --dir docs/adr
-
-# Find ADRs for a file
-decider list --dir docs/adr --path "src/db/users.go"
-
-# Update index
-decider index --dir docs/adr
-```
+Do not edit `index.yaml` manually; regenerate it with `adr index`. Follow the
+required rationale pattern in the ADR README when adding or revising a record.

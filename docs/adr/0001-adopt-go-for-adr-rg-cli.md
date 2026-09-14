@@ -1,6 +1,6 @@
 ---
 adr_id: ADR-0001
-title: Adopt Go for DECIDER CLI
+title: Adopt Go for adr-rg CLI
 status: adopted
 date: 2026-01-16
 scope:
@@ -27,11 +27,11 @@ superseded_by: []
 related_adrs: []
 ---
 
-# ADR-0001: Adopt Go for DECIDER CLI
+# ADR-0001: Adopt Go for adr-rg CLI
 
 ## Context
 
-DECIDER needs a language and runtime for building a cross-platform CLI tool that:
+adr-rg needs a language and runtime for building a cross-platform CLI tool that:
 - Produces single static binaries with no runtime dependencies
 - Has excellent tooling for testing, linting, and formatting
 - Can be easily distributed via GitHub releases
@@ -47,7 +47,7 @@ Candidates considered: Go, Rust, Python, TypeScript/Node.
 
 ## Decision
 
-We adopt **Go 1.25+** as the implementation language for DECIDER.
+We adopt **Go 1.25+** as the implementation language for adr-rg.
 
 We will use the **stdlib `flag` package** for CLI parsing to minimize dependencies. If complexity grows significantly (subcommands with shared flags, auto-completion), we may revisit and adopt Cobra in a future ADR.
 
@@ -106,7 +106,7 @@ We will use the **stdlib `flag` package** for CLI parsing to minimize dependenci
 - Performance is slower than compiled languages for CLI cold starts
 
 **Rejected despite:**
-- Familiar to web developers who may use DECIDER
+- Familiar to web developers who may use adr-rg
 - Strong typing with TypeScript catches errors at compile time
 - Rich ecosystem for YAML, Markdown, and JSON processing
 - npm distribution would be convenient for JavaScript-heavy teams

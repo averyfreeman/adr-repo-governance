@@ -1,4 +1,4 @@
-// Package validate provides input validation utilities for the DECIDER CLI.
+// Package validate provides input validation utilities for adr-rg.
 package validate
 
 import (

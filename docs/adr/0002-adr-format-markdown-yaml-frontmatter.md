@@ -186,7 +186,7 @@ docs/adr/NNNN-kebab-case-title.md
 **Negative:**
 - Frontmatter must be kept in sync with content (mitigated by validation)
 - Learning curve for scope.paths glob patterns (mitigated by examples)
-- YAML syntax errors can be subtle (mitigated by `decider check adr`)
+- YAML syntax errors can be subtle (mitigated by `adr check adr`)
 
 ## Agent Guidance
 

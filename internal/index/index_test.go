@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sventorben/decider/internal/adr"
+	"github.com/averyfreeman/adr-repo-governance/internal/adr"
 )
 
 func TestGenerate(t *testing.T) {

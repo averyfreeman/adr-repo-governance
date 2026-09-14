@@ -1,430 +1,207 @@
-# DECIDER Specification
+# adr-rg Specification
 
-This document defines the stable CLI contract, file formats, and behavior guarantees for DECIDER.
+This document defines the file model and command contract for adr-rg, a
+Git-native ADR repository-governance utility.
 
-## Supported Output Formats
+## Scope and non-goals
 
-DECIDER supports multiple output formats for machine-readable data:
+adr-rg creates, validates, indexes, queries, and scope-matches Architecture
+Decision Records. It does not choose architecture, manage approval workflow,
+implement source-code changes, or semantically prove that a change follows a
+decision. Those responsibilities belong to humans, CI policy, or an architecture
+assistant.
 
-| Format | Extension | Description | Default |
-|--------|-----------|-------------|---------|
-| TOON   | `.toon`   | Token-Oriented Object Notation, compact encoding of JSON data model | Yes (structured) |
-| JSON   | `.json`   | Standard JSON format | No |
-| YAML   | `.yaml`   | YAML format (index files only) | Yes (index) |
-| text   | -         | Human-readable text output | Yes (CLI) |
+## Output formats
 
-### Format Selection
+| Format | Use | Availability |
+| --- | --- | --- |
+| text | Human-readable command output | Default for CLI commands |
+| json | Stable machine-readable command results | Commands that accept --format |
+| yaml | Serialized index data | adr index only |
 
-- **CLI output**: Default is `text` for human readability. Use `--format=toon` or `--format=json` for machine-readable output.
-- **Index files**: Default is YAML (`index.yaml`) for human editability and git diff friendliness.
-- **Structured output**: When `--format=toon` or `--format=json` is specified, output is deterministic (sorted keys).
+JSON is the canonical machine-readable integration format. Text is intended for
+interactive use. The on-disk ADR index is YAML because it is generated metadata
+that remains easy to review in Git.
 
-### TOON Format
+Format names are case-insensitive. Command options must appear before a
+positional title or identifier.
 
-TOON (Token-Oriented Object Notation) encodes the same data model as JSON:
-- Objects: `{key:value key2:value2}`
-- Arrays: `[item1 item2 item3]`
-- Strings: bare words for identifiers (`hello`), quoted for spaces/special chars (`"hello world"`)
-- Numbers: `42`, `3.14`
-- Booleans: `true`, `false`
-- Null: `null`
+## ADR files
 
-Example TOON output:
-```
-{adr_id:ADR-0001 status:adopted title:"Use PostgreSQL"}
-```
+ADRs are stored in docs/adr/ unless --dir specifies another directory. Files use
+the form NNNN-kebab-case-title.md and contain YAML frontmatter delimited by ---.
 
-Equivalent JSON:
-```json
-{"adr_id": "ADR-0001", "status": "adopted", "title": "Use PostgreSQL"}
-```
+Required frontmatter:
 
-### Interoperability
-
-To convert between formats:
-- TOON ↔ JSON: Data model is identical; use any TOON/JSON parser
-- Use `--format=json` flag when JSON is required for downstream tools
-
-## ADR Format
-
-### File Location
-
-ADRs are stored in `docs/adr/` by default (configurable via `--dir`).
-
-### Filename Convention
-
-```
-NNNN-kebab-case-title.md
-```
-
-- `NNNN`: Zero-padded 4-digit number (0001, 0002, ..., 9999)
-- `kebab-case-title`: Lowercase with hyphens, derived from title
-- Extension: `.md`
-
-Example: `0042-use-postgresql-for-persistence.md`
-
-### Frontmatter Schema
-
-All ADRs must have YAML frontmatter between `---` delimiters:
-
-```yaml
+~~~yaml
 ---
-adr_id: ADR-NNNN        # Required. Format: ADR-NNNN (must match filename)
-title: "Title"           # Required. Human-readable title
-status: adopted         # Required. One of: proposed, adopted, rejected, deprecated, superseded
-date: YYYY-MM-DD         # Required. ISO 8601 date
+adr_id: ADR-NNNN
+title: "Decision title"
+status: proposed | adopted | rejected | deprecated | superseded
+date: YYYY-MM-DD
+---
+~~~
+
+Optional frontmatter includes:
+
+~~~yaml
 scope:
-  paths:                 # Optional. Glob patterns for affected paths
+  paths:
     - "path/**"
-tags:                    # Optional. Categorization tags
-  - tag1
-constraints:             # Optional. Rules that MUST be followed
-  - "Constraint"
-invariants:              # Optional. Properties that must always hold
-  - "Invariant"
-supersedes: []           # Optional. List of ADR IDs this supersedes
-superseded_by: []        # Optional. List of ADR IDs that supersede this
-related_adrs: []         # Optional. List of related ADR IDs
----
-```
+tags: [database, api]
+constraints:
+  - "Rule that must be followed"
+invariants:
+  - "Property that must always hold"
+supersedes: []
+superseded_by: []
+related_adrs: []
+~~~
+
+The body must contain these second-level headings:
 
-### Status Values
-
-| Status | Description |
-|--------|-------------|
-| `proposed` | Under discussion, not yet decided |
-| `adopted` | Approved and in effect |
-| `rejected` | Considered and explicitly rejected |
-| `deprecated` | Was adopted, now discouraged |
-| `superseded` | Replaced by another ADR |
+1. Context
+2. Decision
+3. Alternatives Considered
+4. Consequences
 
-### Required Sections
+Strict validation also checks the repository’s configured rationale requirements.
 
-ADR body MUST contain these markdown sections (## headings):
+## Generated index
 
-1. **Context** - Why this decision is needed
-2. **Decision** - What was decided and why
-3. **Alternatives Considered** - Other options evaluated
-4. **Consequences** - Positive and negative impacts
+adr index writes docs/adr/index.yaml by default. The file is derived from ADR
+frontmatter and must not be edited manually. adr index --check compares the
+existing entries with a freshly generated index while ignoring its timestamp.
 
-Optional section:
-- **Agent Guidance** - Instructions for AI agents
+## Commands
 
-### Rationale Pattern
+~~~text
+adr init [--dir PATH] [--format text|json]
+adr new [OPTIONS] TITLE
+adr list [OPTIONS]
+adr show [OPTIONS] IDENTIFIER
+adr check adr [OPTIONS]
+adr index [OPTIONS]
+adr bs-detector --base REF [OPTIONS]
+adr version
+~~~
 
-ADRs generated by DECIDER MUST include explicit rationale documentation using the following pattern:
+### adr init
 
-#### Adopted Option
+Creates the ADR directory, templates/adr.md, and index.yaml when they do not
+exist. --dir changes the target directory. JSON output contains adr_dir,
+template, and index paths.
 
-The chosen option MUST include:
+### adr new
 
-```markdown
-### [Option Name]: Adopted
+Creates the next numbered ADR with status proposed by default and refreshes the
+index unless --no-index is provided.
 
-**Adopted because:**
-- Concrete reason tied to decision drivers
-- Technical, operational, or strategic justification
-
-**Adopted despite:**
-- Known downside consciously accepted
-- Trade-off compared to alternatives
-```
-
-#### Rejected Alternatives
-
-Each rejected option MUST include:
-
-```markdown
-### [Option Name]: Rejected
-
-**Rejected because:**
-- Concrete reason for rejection
-- How it failed to meet decision drivers
-
-**Rejected despite:**
-- Legitimate strength of this option
-- Benefit that made it attractive
-```
-
-#### Prohibited Patterns
-
-The following patterns MUST NOT be used as the sole decision documentation:
-
-- Pros/cons tables without explicit rationale sections
-- Freeform narrative without structured rationale headings
-- Vague language like "better fit" without concrete justification
-- Omitting "despite" sections (trade-offs MUST be documented)
-
-## Index Format
-
-### File Location
-
-`docs/adr/index.yaml` (relative to ADR directory)
-
-### Schema
-
-```yaml
-# AUTO-GENERATED by decider index - DO NOT EDIT
-generated_at: "2026-01-16T10:30:00Z"   # RFC3339 UTC timestamp
-adr_count: 4                            # Number of indexed ADRs
-adrs:
-  - adr_id: ADR-0001                    # ADR identifier
-    title: "Decision Title"             # ADR title
-    status: adopted                    # Current status
-    date: "2026-01-16"                  # Decision date
-    tags:                               # Tags (may be empty)
-      - foundation
-    scope_paths:                        # Scope paths (may be empty)
-      - "src/**"
-    file: "0001-decision-title.md"      # Filename
-```
-
-### Stability Guarantees
-
-The following index keys are **stable** and will not change without a major version bump:
-- `generated_at`
-- `adr_count`
-- `adrs`
-- `adrs[].adr_id`
-- `adrs[].title`
-- `adrs[].status`
-- `adrs[].date`
-- `adrs[].tags`
-- `adrs[].scope_paths`
-- `adrs[].file`
-
-New keys may be added in minor versions.
-
-## CLI Commands
-
-### decider init
-
-Initialize ADR directory structure.
-
-```
-decider init [--dir PATH]
-```
-
-**Flags:**
-- `--dir PATH` - ADR directory (default: `docs/adr`)
-
-**Behavior:**
-- Creates directory structure if missing
-- Creates template file if missing
-- Creates empty index.yaml if missing
-- Idempotent (safe to run repeatedly)
-
-**Exit codes:**
-- 0: Success
-- 1: Error
-
-### decider new
-
-Create a new ADR.
-
-```
-decider new [OPTIONS] TITLE
-```
-
-**Flags:**
-- `--dir PATH` - ADR directory (default: `docs/adr`)
-- `--tags CSV` - Comma-separated tags
-- `--paths CSV` - Comma-separated scope paths (globs)
-- `--status STATUS` - Initial status (default: `proposed`)
-- `--no-index` - Skip updating index
-- `--format FORMAT` - Output format: `text` | `toon` | `json` (default: `text`)
-
-**Behavior:**
-- Determines next ADR number from existing files
-- Generates kebab-case filename
-- Creates ADR with template content
-- Updates index (unless `--no-index`)
-
-**Exit codes:**
-- 0: Success
-- 1: Error
-
-### decider index
-
-Generate or check the ADR index.
-
-```
-decider index [OPTIONS]
-```
-
-**Flags:**
-- `--dir PATH` - ADR directory (default: `docs/adr`)
-- `--check` - Verify index is up-to-date (don't modify)
-- `--format FORMAT` - Output format: `text` | `toon` | `json` | `yaml` (default: `text`)
-
-**Behavior:**
-- Without `--check`: Regenerates index.yaml
-- With `--check`: Verifies index matches current ADRs
-
-**Exit codes:**
-- 0: Success (or index up-to-date with `--check`)
-- 1: Error
-- 2: Index out of date (with `--check`)
-
-### decider list
-
-List ADRs with optional filters.
-
-```
-decider list [OPTIONS]
-```
-
-**Flags:**
-- `--dir PATH` - ADR directory (default: `docs/adr`)
-- `--status STATUS` - Filter by status
-- `--tag TAG` - Filter by tag (repeatable)
-- `--path PATH` - Filter by scope path match
-- `--format FORMAT` - Output format: `text` | `toon` | `json` (default: `text`)
-
-**Behavior:**
-- Uses index.yaml if available, else scans ADR files
-- Filters are AND-ed together
-
-**Exit codes:**
-- 0: Success
-- 1: Error
-
-### decider show
-
-Display details of an ADR.
-
-```
-decider show [OPTIONS] IDENTIFIER
-```
-
-**Arguments:**
-- `IDENTIFIER` - ADR-NNNN, NNNN, or filename
-
-**Flags:**
-- `--dir PATH` - ADR directory (default: `docs/adr`)
-- `--format FORMAT` - Output format: `text` | `toon` | `json` (default: `text`)
-
-**Exit codes:**
-- 0: Success
-- 1: Error or ADR not found
-
-### decider check adr
-
-Validate ADRs for format compliance.
-
-```
-decider check adr [OPTIONS]
-```
-
-**Flags:**
-- `--dir PATH` - ADR directory (default: `docs/adr`)
-- `--strict` - Treat warnings as errors (exit code 2 on rationale pattern violations)
-- `--format FORMAT` - Output format: `text` | `toon` | `json` (default: `text`)
-
-**Validates:**
-- Required frontmatter keys present
-- Status is valid enum value
-- Date is YYYY-MM-DD format
-- ADR ID matches pattern ADR-NNNN
-- Filename number matches ADR ID
-- Required sections present in body
-- Rationale pattern presence (see below)
-
-**Rationale Pattern Validation:**
-
-DECIDER MUST detect missing rationale patterns during validation:
-- Missing "Adopted because:" section
-- Missing "Adopted despite:" section
-- Missing "Rejected because:" for alternatives
-- Missing "Rejected despite:" for alternatives
-
-Enforcement policy:
-- Default mode: Issues warnings for missing rationale pattern (exit code 0)
-- Strict mode (`--strict`): Treats rationale violations as errors (exit code 2)
-
-**Exit codes:**
-- 0: All ADRs valid (warnings may be present in default mode)
-- 1: Parse/usage error
-- 2: Validation failures (errors, or warnings in strict mode)
-
-### decider check diff
-
-Find ADRs applicable to changed files.
-
-```
-decider check diff --base REF [OPTIONS]
-```
-
-**Flags:**
-- `--base REF` - Base git ref for diff (required)
-- `--dir PATH` - ADR directory (default: `docs/adr`)
-- `--format FORMAT` - Output format: `text` | `toon` | `json` (default: `text`)
-
-**Behavior:**
-- Gets changed files via `git diff --name-only BASE`
-- Matches changed files against ADR scope.paths using glob matching
-- Outputs applicable ADRs with their constraints/invariants
-
-**Exit codes:**
-- 0: Success
-- 1: Parse/usage error
-
-**Note:** Constraints are reported but not semantically enforced. The tool surfaces applicable ADRs; enforcement is the responsibility of the developer or CI pipeline.
-
-### decider explain
-
-Explain why ADRs apply to changes.
-
-```
-decider explain --base REF [OPTIONS]
-```
-
-**Flags:**
-- `--base REF` - Base git ref for diff (required)
-- `--dir PATH` - ADR directory (default: `docs/adr`)
-- `--format FORMAT` - Output format: `text` | `toon` | `json` (default: `text`)
-
-**Behavior:**
-- Like `check diff` but with narrative explanation
-- Shows which patterns matched which files
-
-**Exit codes:**
-- 0: Success
-- 1: Parse/usage error
-
-### decider version
-
-Show version information.
-
-```
-decider version
-```
-
-**Output:**
-```
-decider version X.Y.Z
-  commit: <commit-sha>
-  built:  <build-timestamp>
-```
-
-## Glob Pattern Matching
-
-Scope paths use glob patterns:
-
-| Pattern | Matches |
-|---------|---------|
-| `*.go` | Go files in current directory |
-| `src/*` | Direct children of src/ |
-| `src/**` | All files under src/ recursively |
-| `src/**/*.go` | All Go files under src/ |
-| `**/*.proto` | All .proto files anywhere |
-
-## Non-Goals
-
-The following are explicitly out of scope for DECIDER:
-
-- **Semantic constraint enforcement**: Constraints are reported but not automatically enforced
-- **ADR workflow enforcement**: No built-in approval process
-- **Integration with issue trackers**: No JIRA/GitHub Issues linking
-- **ADR templates customization**: Single default template only
-- **Remote ADR repositories**: Local files only
+| Option | Meaning |
+| --- | --- |
+| --dir PATH | ADR directory; default docs/adr |
+| --tags TAGS | Comma-separated tags |
+| --paths GLOBS | Comma-separated scope globs |
+| --status STATUS | Initial lifecycle status |
+| --no-index | Do not refresh the generated index |
+| --format text\|json | Output format |
+
+### adr list
+
+Lists ADR metadata from the generated index when available, otherwise from ADR
+files. Filters are combined as requested; --tag matches an ADR containing that
+tag, and --path matches a declared scope path.
+
+| Option | Meaning |
+| --- | --- |
+| --dir PATH | ADR directory; default docs/adr |
+| --status STATUS | Filter by lifecycle status |
+| --tag TAG | Filter by tag |
+| --path PATH | Filter by scope-path match |
+| --format text\|json | Output format |
+
+JSON output has the shape { "count": N, "adrs": [...] }. Each entry contains
+adr_id, title, status, date, and file.
+
+### adr show
+
+Displays one ADR selected by ADR-NNNN, a numeric ID, or a filename.
+
+| Option | Meaning |
+| --- | --- |
+| --dir PATH | ADR directory; default docs/adr |
+| --format text\|json | Output format |
+
+JSON output includes identity, status, date, tags, scope paths, constraints,
+invariants, the extracted decision section, and filename.
+
+### adr check adr
+
+Validates every ADR in the selected directory.
+
+| Option | Meaning |
+| --- | --- |
+| --dir PATH | ADR directory; default docs/adr |
+| --strict | Treat validation warnings as failures |
+| --format text\|json | Output format |
+
+JSON output contains valid, count, per-file results, and aggregate errors and
+warnings.
+
+### adr index
+
+Generates the index unless --check is provided. In check mode it reports whether
+the committed index matches current ADR metadata and never modifies the file.
+
+| Option | Meaning |
+| --- | --- |
+| --dir PATH | ADR directory; default docs/adr |
+| --check | Check freshness without writing |
+| --format text\|json\|yaml | Output format |
+
+### adr bs-detector
+
+bs-detector runs git diff --name-only REF, loads ADRs from the selected
+directory, and matches changed paths against each ADR’s scope.paths glob
+patterns.
+
+~~~bash
+adr bs-detector --base main
+adr bs-detector --base main --format json
+~~~
+
+Only proposed and adopted ADRs are applicability candidates. Rejected,
+deprecated, and superseded records remain available through adr list and
+adr show as history but do not create active review signals.
+
+The result reports:
+
+- changed_files;
+- applicable_adrs, including IDs, titles, matched paths, matched files,
+  constraints, and invariants; and
+- summary, including applicable ADR, constraint, and invariant counts plus
+  aggregated constraints and invariants.
+
+A successful match means that the decision should be reviewed. It does not mean
+the implementation is compliant.
+
+| Option | Meaning |
+| --- | --- |
+| --base REF | Required Git ref passed to git diff --name-only |
+| --dir PATH | ADR directory; default docs/adr |
+| --format text\|json | Output format |
+
+## Exit behavior
+
+- 0: command completed successfully; non-strict validation warnings may exist;
+- 1: command, Git, or input error; and
+- 2: ADR validation failed, strict validation found warnings, or adr index
+  --check found a stale index.
+
+## Design principles
+
+- Keep ADRs human-readable and version-controlled.
+- Keep JSON stable for automation and AI-tool integration.
+- Keep scope matching explicit and deterministic.
+- Surface governance information without pretending to enforce semantics.
+- Prefer small, testable components and minimal dependencies.

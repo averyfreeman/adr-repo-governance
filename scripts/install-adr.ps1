@@ -1,25 +1,14 @@
-# Install decider CLI from GitHub Releases with checksum verification.
-# Installs to demo/tools/decider/ (demo-local).
+# Install the adr CLI from GitHub Releases with checksum verification.
+# Installs to ./tools/adr/ (repo-local).
 
 param(
-    [string]$InstallDir,
-    [string]$VersionFile
+    [string]$InstallDir = ".\tools\adr",
+    [string]$VersionFile = ".\tools\adr.version"
 )
 
 $ErrorActionPreference = "Stop"
 
-# Resolve script directory (demo/)
-$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$DemoDir = Split-Path -Parent $ScriptDir
-
-if (-not $InstallDir) {
-    $InstallDir = Join-Path $DemoDir "tools\decider"
-}
-if (-not $VersionFile) {
-    $VersionFile = Join-Path $DemoDir "tools\decider.version"
-}
-
-$Repo = "sventorben/decider"
+$Repo = "averyfreeman/adr-repo-governance"
 
 # Read pinned version
 if (-not (Test-Path $VersionFile)) {
@@ -46,17 +35,17 @@ $Arch = if ([Environment]::Is64BitOperatingSystem) {
 
 # Build artifact names
 $VersionNum = $Version.TrimStart('v')
-$ArchiveName = "decider_${VersionNum}_windows_${Arch}.zip"
+$ArchiveName = "adr_${VersionNum}_windows_${Arch}.zip"
 $ChecksumsName = "checksums.txt"
 $BaseUrl = "https://github.com/${Repo}/releases/download/${Version}"
 $ArchiveUrl = "${BaseUrl}/${ArchiveName}"
 $ChecksumsUrl = "${BaseUrl}/${ChecksumsName}"
 
-Write-Host "Installing decider $Version for windows/$Arch..."
+Write-Host "Installing adr-rg $Version for windows/$Arch..."
 Write-Host "  Archive: $ArchiveUrl"
 
 # Create temp directory
-$TmpDir = Join-Path $env:TEMP "decider-install-$(Get-Random)"
+$TmpDir = Join-Path $env:TEMP "adr-install-$(Get-Random)"
 New-Item -ItemType Directory -Path $TmpDir -Force | Out-Null
 
 try {
@@ -107,11 +96,10 @@ try {
     if (-not (Test-Path $InstallDir)) {
         New-Item -ItemType Directory -Path $InstallDir -Force | Out-Null
     }
-    $BinaryPath = Join-Path $ExtractDir "decider.exe"
-    $DestPath = Join-Path $InstallDir "decider.exe"
+    $BinaryPath = Join-Path $ExtractDir "adr.exe"
+    $DestPath = Join-Path $InstallDir "adr.exe"
     Move-Item -Path $BinaryPath -Destination $DestPath -Force
 
-    Write-Host ""
     Write-Host "Installed to: $DestPath"
     Write-Host ""
     Write-Host "Add to PATH with:"

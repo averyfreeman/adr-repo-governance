@@ -1,7 +1,7 @@
 ---
 adr_id: ADR-0006
-title: "TOON as Default Structured Format"
-status: adopted
+title: "TOON as Default Structured Format (Superseded)"
+status: superseded
 date: 2026-01-18
 scope:
   paths:
@@ -15,6 +15,8 @@ tags:
   - format
   - cli
   - output
+superseded_by:
+  - ADR-0007
 constraints:
   - TOON must be the default for machine-readable structured output
   - JSON must remain fully supported via explicit format selection
@@ -26,18 +28,21 @@ invariants:
   - Round-trip encoding/decoding produces equivalent data
 ---
 
-# TOON as Default Structured Format
+# TOON as Default Structured Format (Superseded)
+
+> Historical decision retained for traceability. Superseded by ADR-0007,
+> which makes JSON the canonical machine-readable output for adr-rg.
 
 ## Context
 
-DECIDER produces structured output in several contexts:
-- CLI command outputs (list, show, check, explain) with `--format` flag
+adr-rg produces structured output in several contexts:
+- CLI command outputs (list, show, check) with a `--format` flag
 - Index files (`index.yaml`)
 - Machine-readable error information
 
 Currently, JSON is the default machine-readable format. TOON (Token-Oriented Object Notation) is a compact encoding of the JSON data model that offers better token efficiency for LLM consumption while maintaining full compatibility with the JSON data model.
 
-As AI agents become primary consumers of DECIDER output, optimizing for token efficiency without sacrificing interoperability is valuable.
+As AI agents become primary consumers of adr-rg output, optimizing for token efficiency without sacrificing interoperability is valuable.
 
 ## Decision
 
@@ -103,7 +108,7 @@ Adopt TOON as the default structured format for machine-readable output, while m
 - Reduced token usage for AI agent consumers
 - Deterministic outputs improve caching and reproducibility
 - Full backward compatibility via `--format=json`
-- Clear format selection model: `--format=toon|json|yaml`
+- Clear format selection model: `--format=toon|json|yaml` (historical)
 
 ### Negative
 - Users expecting JSON by default must update scripts
@@ -116,7 +121,7 @@ Adopt TOON as the default structured format for machine-readable output, while m
 
 ## Agent Guidance
 
-When processing DECIDER output:
+When processing the historical output:
 1. Default format is TOON for structured data
 2. Use `--format=json` if JSON is required for downstream tools
 3. TOON and JSON represent identical data structures

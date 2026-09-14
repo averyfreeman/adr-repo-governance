@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/sventorben/decider/internal/adr"
+	"github.com/averyfreeman/adr-repo-governance/internal/adr"
 )
 
 // ShowConfig holds configuration for the show command.
@@ -62,7 +62,7 @@ func RunShow(cfg *ShowConfig) (*ShowResult, error) {
 	}
 
 	// Output
-	if cfg.Format == FormatTOON || cfg.Format == FormatJSON {
+	if cfg.Output.IsStructuredFormat() {
 		_ = cfg.Output.PrintStructured(result)
 	} else {
 		cfg.Output.Println("# %s: %s", result.ADRID, result.Title)

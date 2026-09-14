@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/sventorben/decider/internal/adr"
-	"github.com/sventorben/decider/internal/glob"
-	"github.com/sventorben/decider/internal/index"
+	"github.com/averyfreeman/adr-repo-governance/internal/adr"
+	"github.com/averyfreeman/adr-repo-governance/internal/glob"
+	"github.com/averyfreeman/adr-repo-governance/internal/index"
 )
 
 // ListConfig holds configuration for the list command.
@@ -36,7 +36,7 @@ type ListResult struct {
 
 // RunList lists ADRs with optional filters.
 func RunList(cfg *ListConfig) (*ListResult, error) {
-	var entries []ListEntry
+	entries := make([]ListEntry, 0)
 
 	// Try to use index if it exists
 	indexPath := filepath.Join(cfg.Dir, index.IndexFilename)
@@ -91,7 +91,7 @@ func RunList(cfg *ListConfig) (*ListResult, error) {
 	}
 
 	// Output
-	if cfg.Format == FormatTOON || cfg.Format == FormatJSON {
+	if cfg.Output.IsStructuredFormat() {
 		_ = cfg.Output.PrintStructured(result)
 	} else {
 		if len(entries) == 0 {

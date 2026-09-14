@@ -1,4 +1,4 @@
-.PHONY: fmt test build check adr-check adr-check-strict adr-diff
+.PHONY: fmt test build check adr-check adr-check-strict bs-detector
 
 BASE ?= origin/main
 
@@ -9,15 +9,15 @@ test:
 	go test ./...
 
 build:
-	go build ./cmd/decider
+	go build ./cmd/adr
 
 adr-check:
-	./decider check adr
+	./adr check adr
 
 adr-check-strict:
-	./decider check adr --strict
+	./adr check adr --strict
 
-adr-diff:
-	./decider check diff --base $(BASE)
+bs-detector:
+	./adr bs-detector --base $(BASE)
 
 check: fmt test build adr-check-strict

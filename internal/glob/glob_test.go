@@ -32,8 +32,8 @@ func TestMatch(t *testing.T) {
 		{"**/*.go", "src/sub/main.go", true},
 
 		// Complex patterns
-		{"cmd/decider/**", "cmd/decider/main.go", true},
-		{"cmd/decider/**", "cmd/other/main.go", false},
+		{"cmd/adr/**", "cmd/adr/main.go", true},
+		{"cmd/adr/**", "cmd/other/main.go", false},
 		{"internal/**", "internal/adr/adr.go", true},
 
 		// Exact match

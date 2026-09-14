@@ -7,7 +7,7 @@ scope:
   paths:
     - ".github/workflows/**"
     - ".goreleaser.yaml"
-    - "cmd/decider/**"
+    - "cmd/adr/**"
 tags:
   - ci
   - release
@@ -30,7 +30,7 @@ related_adrs:
 
 ## Context
 
-DECIDER needs a reliable, automated release process that:
+adr-rg needs a reliable, automated release process that:
 1. Builds cross-platform binaries
 2. Embeds version information
 3. Creates GitHub Releases with artifacts
@@ -78,8 +78,8 @@ Steps:
 2. Setup Go 1.25+
 3. Run `go test ./...`
 4. Run `golangci-lint`
-5. Build CLI: `go build ./cmd/decider`
-6. Run `decider check adr` to validate ADRs
+5. Build CLI: `go build ./cmd/adr`
+6. Run `adr check adr` to validate ADRs
 
 ### Release Pipeline (release.yml)
 
@@ -95,8 +95,8 @@ Steps:
 ```yaml
 # .goreleaser.yaml
 builds:
-  - main: ./cmd/decider
-    binary: decider
+  - main: ./cmd/adr
+    binary: adr
     env:
       - CGO_ENABLED=0
     goos:
@@ -115,10 +115,10 @@ builds:
 
 ### Version Command
 
-`decider version` outputs:
+`adr version` outputs:
 
 ```
-decider version 0.1.0
+adr version 0.1.0
   commit: abc1234
   built:  2026-01-16T10:30:00Z
 ```

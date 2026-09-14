@@ -93,10 +93,10 @@ jobs:
           cache: true
 
       - name: Build
-        run: go build -v ./cmd/decider
+        run: go build -v ./cmd/adr
 
       - name: Verify CLI works
-        run: ./decider version
+        run: ./adr version
 
   validate-adrs:
     name: Validate ADRs
@@ -112,11 +112,11 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      - name: Build decider
-        run: go build -v ./cmd/decider
+      - name: Build adr
+        run: go build -v ./cmd/adr
 
       - name: Validate ADRs (strict)
-        run: ./decider check adr --strict
+        run: ./adr check adr --strict
 
       - name: Check index is up-to-date
-        run: ./decider index --check
+        run: ./adr index --check
