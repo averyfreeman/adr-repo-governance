@@ -10,10 +10,15 @@ import (
 type Status string
 
 const (
+	// StatusProposed marks an ADR that is under discussion.
 	StatusProposed   Status = "proposed"
+	// StatusAdopted marks an ADR whose decision is in force.
 	StatusAdopted    Status = "adopted"
+	// StatusRejected marks an ADR whose decision was not accepted.
 	StatusRejected   Status = "rejected"
+	// StatusDeprecated marks an ADR retained for history but no longer recommended.
 	StatusDeprecated Status = "deprecated"
+	// StatusSuperseded marks an ADR replaced by a later decision.
 	StatusSuperseded Status = "superseded"
 )
 

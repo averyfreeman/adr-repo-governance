@@ -23,6 +23,7 @@ type ValidationError struct {
 	Code     string // Machine-readable error code
 }
 
+// Error formats the validation failure for human-readable CLI output.
 func (e ValidationError) Error() string {
 	return fmt.Sprintf("%s: %s: %s", e.File, e.Field, e.Message)
 }
