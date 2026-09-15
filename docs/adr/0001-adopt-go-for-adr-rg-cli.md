@@ -15,7 +15,7 @@ tags:
   - language
   - foundation
 constraints:
-  - Use Go 1.25 or later for generics and improved stdlib
+  - Use Go 1.26 or later for the supported toolchain and improved stdlib
   - Keep external dependencies minimal
   - Prefer stdlib flag package over heavy CLI frameworks unless complexity warrants it
 invariants:
@@ -47,7 +47,7 @@ Candidates considered: Go, Rust, Python, TypeScript/Node.
 
 ## Decision
 
-We adopt **Go 1.25+** as the implementation language for adr-rg.
+We adopt **Go 1.26+** as the implementation language for adr-rg.
 
 We will use the **stdlib `flag` package** for CLI parsing to minimize dependencies. If complexity grows significantly (subcommands with shared flags, auto-completion), we may revisit and adopt Cobra in a future ADR.
 

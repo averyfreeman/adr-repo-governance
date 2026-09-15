@@ -1,35 +1,65 @@
-# adr-rg
+# ADR - RG
+
+### A CLI for scaffolding agent-centric repositories and governing architecture decisions.
+
+Architecture decisions should not disappear into a pull request, a chat thread, or one engineer’s memory. `adr` keeps them in Markdown, gives them useful metadata, and makes the relevant record easy to find when code changes.
+
+It is deliberately small. An architecture assistant or engineering team chooses the design; `adr` stores the decision, validates the record, and points reviewers at decisions whose scope may have been touched.
+
+Scaffolding includes standard `CLAUDE.md`, `AGENTS.md`, language guidance, and
+editable Git defaults. The scope review command is `adr detect-bs`.
 
 **Git-native ADR governance for teams that want decisions to survive the sprint.**
 
-Architecture decisions should not disappear into a pull request, a chat thread,
-or one engineer’s memory. `adr-rg` keeps them in Markdown, gives them useful
-metadata, and makes the relevant record easy to find when code changes.
-
-It is deliberately small. An architecture assistant or engineering team chooses
-the design; `adr-rg` stores the decision, validates the record, and points
-reviewers at decisions whose scope may have been touched.
-
 ## Install
 
-Install a pinned release from this repository:
+Install from source:
 
 ~~~bash
-./scripts/install-adr.sh
-export PATH="$PWD/tools/adr:$PATH"
+go install github.com/averyfreeman/adr-repo-governance/cmd/adr@v0.2.0
 ~~~
 
-Or install from source:
+From a checkout, install into the XDG user-space layout:
 
 ~~~bash
-go install github.com/averyfreeman/adr-repo-governance/cmd/adr@v0.1.0
+make install
 ~~~
+
+The default application data directory is `~/.local/share/adr-rg`, and the
+`adr` symlink is created at `~/.local/bin/adr`. Set `XDG_DATA_HOME`,
+`XDG_BIN_HOME`, or `prefix` to override the paths. On macOS, use
+`make install-mac-layout` to place application files under
+`~/Library/Application Support/org.unixgreybeard.adr-rg`.
 
 Check the binary:
 
 ~~~bash
 adr version
 ~~~
+
+Build the lightweight Alpine container from the current version tag:
+
+~~~bash
+make build-container
+make publish-container
+~~~
+
+The default image is `averyfreeman/adr-repo-govern`; set `DOCKER_USERNAME` or
+`CONTAINER_USERNAME` to publish under another registry account.
+
+## Scaffold a repository
+
+Generate the default instruction files and language guidance without
+initializing Git or contacting a remote:
+
+~~~bash
+adr scaffold --lang rust
+adr scaffold -l go -d ./new-project
+~~~
+
+The generated `.adr-scaffold.yaml` records editable defaults for version tags,
+commit conventions, pushes, remotes, and other Git habits. Existing files are
+resolved interactively; use `--force` when blind replacement is intentional.
 
 ## Create and query ADRs
 
@@ -97,11 +127,11 @@ people review in Git.
 ## Bullshit Detector
 
 The **Bullshit Detector** is the memorable name for the practical bit: run
-`adr bs-detector` when a change is ready for review.
+`adr detect-bs` when a change is ready for review.
 
 ~~~bash
-adr bs-detector --base main
-adr bs-detector --base main --format json
+adr detect-bs --base main
+adr detect-bs --base main --format json
 ~~~
 
 It compares changed Git paths with the `scope.paths` globs on proposed and
@@ -121,7 +151,8 @@ reported ADR and inspect the implementation.
 | `adr show <id>` | Show one ADR’s metadata, decision, and governance fields |
 | `adr check adr` | Validate ADR files |
 | `adr index` | Generate or check the YAML index |
-| `adr bs-detector --base <ref>` | Find ADRs applicable to changed Git paths |
+| `adr detect-bs --base <ref>` | Find ADRs applicable to changed Git paths |
+| `adr scaffold --lang <name>` | Generate a language-specific project scaffold |
 | `adr version` | Show version and build metadata |
 
 Normal commands use `--format text` or `--format json`. `adr index` also accepts
@@ -169,12 +200,12 @@ a new record; do not quietly rewrite the history.
 - [Demo](demo/README.md)
 
 ~~~bash
-go test ./...
-go vet ./...
-go build ./cmd/adr
+make test
+make vet
+make build
 adr check adr --strict
 adr index --check
 ~~~
 
-Go is required for local builds. Hosted CI is the cross-platform packaging
-check.
+Go 1.26 or later is required for local builds. Hosted CI is the cross-platform
+packaging check.

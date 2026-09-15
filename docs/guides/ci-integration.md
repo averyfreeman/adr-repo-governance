@@ -9,7 +9,7 @@ decisions that deserve review.
 go build ./cmd/adr
 adr check adr --strict
 adr index --check
-adr bs-detector --base origin/main --format json
+adr detect-bs --base origin/main --format json
 ~~~
 
 The first two checks validate the records. The index check verifies committed
@@ -36,8 +36,8 @@ jobs:
       - run: ./adr index --check
 ~~~
 
-Use a pinned release or installer in production CI. If another tool needs
-applicability data, consume `--format json`.
+Install the CLI with `go install` or build it from source in production CI. If
+another tool needs applicability data, consume `--format json`.
 
 ## Exit codes
 

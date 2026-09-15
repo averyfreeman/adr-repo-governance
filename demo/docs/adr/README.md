@@ -19,9 +19,10 @@ adr check adr --dir docs/adr --strict
 adr list --dir docs/adr
 adr list --dir docs/adr --path "src/db/users.go"
 adr show --dir docs/adr ADR-0001
-adr bs-detector --dir docs/adr --base main
+adr detect-bs --dir docs/adr --base main
 adr index --dir docs/adr
 adr index --dir docs/adr --check
+adr scaffold --lang rust --dir /tmp/adr-rust-example
 ~~~
 
 Create a record with:

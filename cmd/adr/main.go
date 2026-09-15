@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/averyfreeman/adr-repo-governance/internal/cli"
+	"github.com/averyfreeman/adr-repo-governance/internal/scaffold"
 )
 
 // Version information, set via ldflags at build time.
@@ -40,8 +41,10 @@ func main() {
 		runShow(os.Args[2:])
 	case "check":
 		runCheck(os.Args[2:])
-	case "bs-detector":
-		runBSDetector(os.Args[2:])
+	case "detect-bs":
+		runDetectBS(os.Args[2:])
+	case "scaffold":
+		runScaffold(os.Args[2:])
 	case "version":
 		printVersion()
 	case "help", "-h", "--help":
@@ -66,7 +69,8 @@ Commands:
   list          List ADRs with optional filters
   show          Display details of an ADR
   check         Validate ADRs
-  bs-detector   Detect ADRs relevant to changed files
+  detect-bs     Detect ADRs relevant to changed files
+  scaffold      Generate a language-specific project scaffold
   version       Show version information
   help          Show this help message
 
@@ -81,8 +85,8 @@ func printVersion() {
 
 func runInit(args []string) {
 	fs := flag.NewFlagSet("init", flag.ExitOnError)
-	dir := fs.String("dir", defaultADRDir, "ADR directory path")
-	format := fs.String("format", "text", "Output format (text|json)")
+	dir := stringFlag(fs, "dir", "d", defaultADRDir, "ADR directory path")
+	format := stringFlag(fs, "format", "o", "text", "Output format (text|json)")
 	if err := fs.Parse(args); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
@@ -107,12 +111,12 @@ func runInit(args []string) {
 
 func runNew(args []string) {
 	fs := flag.NewFlagSet("new", flag.ExitOnError)
-	dir := fs.String("dir", defaultADRDir, "ADR directory path")
-	tags := fs.String("tags", "", "Comma-separated tags")
-	paths := fs.String("paths", "", "Comma-separated scope paths (globs)")
-	status := fs.String("status", "proposed", "Initial status")
-	noIndex := fs.Bool("no-index", false, "Skip updating index")
-	format := fs.String("format", "text", "Output format (text|json)")
+	dir := stringFlag(fs, "dir", "d", defaultADRDir, "ADR directory path")
+	tags := stringFlag(fs, "tags", "t", "", "Comma-separated tags")
+	paths := stringFlag(fs, "paths", "p", "", "Comma-separated scope paths (globs)")
+	status := stringFlag(fs, "status", "s", "proposed", "Initial status")
+	noIndex := boolFlag(fs, "no-index", "n", false, "Skip updating index")
+	format := stringFlag(fs, "format", "o", "text", "Output format (text|json)")
 
 	fs.Usage = func() {
 		fmt.Println("Usage: adr new [options] <title>")
@@ -175,9 +179,9 @@ func runNew(args []string) {
 
 func runIndex(args []string) {
 	fs := flag.NewFlagSet("index", flag.ExitOnError)
-	dir := fs.String("dir", defaultADRDir, "ADR directory path")
-	check := fs.Bool("check", false, "Check if index is up-to-date (don't modify)")
-	format := fs.String("format", "text", "Output format (text|json|yaml)")
+	dir := stringFlag(fs, "dir", "d", defaultADRDir, "ADR directory path")
+	check := boolFlag(fs, "check", "c", false, "Check if index is up-to-date (don't modify)")
+	format := stringFlag(fs, "format", "o", "text", "Output format (text|json|yaml)")
 	if err := fs.Parse(args); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
@@ -208,11 +212,11 @@ func runIndex(args []string) {
 
 func runList(args []string) {
 	fs := flag.NewFlagSet("list", flag.ExitOnError)
-	dir := fs.String("dir", defaultADRDir, "ADR directory path")
-	status := fs.String("status", "", "Filter by status")
-	tag := fs.String("tag", "", "Filter by tag")
-	path := fs.String("path", "", "Filter by scope path match")
-	format := fs.String("format", "text", "Output format (text|json)")
+	dir := stringFlag(fs, "dir", "d", defaultADRDir, "ADR directory path")
+	status := stringFlag(fs, "status", "s", "", "Filter by status")
+	tag := stringFlag(fs, "tag", "t", "", "Filter by tag")
+	path := stringFlag(fs, "path", "p", "", "Filter by scope path match")
+	format := stringFlag(fs, "format", "o", "text", "Output format (text|json)")
 	if err := fs.Parse(args); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
@@ -246,8 +250,8 @@ func runList(args []string) {
 
 func runShow(args []string) {
 	fs := flag.NewFlagSet("show", flag.ExitOnError)
-	dir := fs.String("dir", defaultADRDir, "ADR directory path")
-	format := fs.String("format", "text", "Output format (text|json)")
+	dir := stringFlag(fs, "dir", "d", defaultADRDir, "ADR directory path")
+	format := stringFlag(fs, "format", "o", "text", "Output format (text|json)")
 
 	fs.Usage = func() {
 		fmt.Println("Usage: adr show [options] <ADR-ID|number|filename>")
@@ -310,9 +314,9 @@ func runCheck(args []string) {
 
 func runCheckADR(args []string) {
 	fs := flag.NewFlagSet("check adr", flag.ExitOnError)
-	dir := fs.String("dir", defaultADRDir, "ADR directory path")
-	strict := fs.Bool("strict", false, "Treat warnings as errors (fail on missing rationale pattern)")
-	format := fs.String("format", "text", "Output format (text|json)")
+	dir := stringFlag(fs, "dir", "d", defaultADRDir, "ADR directory path")
+	strict := boolFlag(fs, "strict", "s", false, "Treat warnings as errors (fail on missing rationale pattern)")
+	format := stringFlag(fs, "format", "o", "text", "Output format (text|json)")
 	if err := fs.Parse(args); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
@@ -342,14 +346,14 @@ func runCheckADR(args []string) {
 	}
 }
 
-func runBSDetector(args []string) {
-	fs := flag.NewFlagSet("bs-detector", flag.ExitOnError)
-	dir := fs.String("dir", defaultADRDir, "ADR directory path")
-	base := fs.String("base", "", "Base ref for git diff (required)")
-	format := fs.String("format", "text", "Output format (text|json)")
+func runDetectBS(args []string) {
+	fs := flag.NewFlagSet("detect-bs", flag.ExitOnError)
+	dir := stringFlag(fs, "dir", "d", defaultADRDir, "ADR directory path")
+	base := stringFlag(fs, "base", "b", "", "Base ref for git diff (required)")
+	format := stringFlag(fs, "format", "o", "text", "Output format (text|json)")
 
 	fs.Usage = func() {
-		fmt.Println("Usage: adr bs-detector --base <ref> [options]")
+		fmt.Println("Usage: adr detect-bs --base <ref> [options]")
 		fmt.Println()
 		fmt.Println("Detect ADRs whose documented scope overlaps files changed since <base>.")
 		fmt.Println()
@@ -374,15 +378,78 @@ func runBSDetector(args []string) {
 		os.Exit(1)
 	}
 
-	cfg := &cli.BSDetectorConfig{
+	cfg := &cli.DetectBSConfig{
 		Dir:    *dir,
 		Base:   *base,
 		Format: outputFormat,
 		Output: cli.NewOutput(outputFormat),
 	}
 
-	if _, err := cli.RunBSDetector(cfg); err != nil {
+	if _, err := cli.RunDetectBS(cfg); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
+}
+
+func runScaffold(args []string) {
+	fs := flag.NewFlagSet("scaffold", flag.ExitOnError)
+	language := stringFlag(fs, "lang", "l", "", "Language template (required)")
+	dir := stringFlag(fs, "dir", "d", ".", "Target directory")
+	force := boolFlag(fs, "force", "F", false, "Overwrite existing files without prompting")
+	format := stringFlag(fs, "format", "o", "text", "Output format (text|json)")
+
+	fs.Usage = func() {
+		fmt.Println("Usage: adr scaffold --lang <language> [options]")
+		fmt.Println()
+		fmt.Println("Generate an offline, language-specific project scaffold.")
+		fmt.Println()
+		fmt.Println("Available languages:", strings.Join(scaffold.Languages(), ", "))
+		fmt.Println()
+		fmt.Println("Options:")
+		fs.PrintDefaults()
+	}
+
+	if err := fs.Parse(args); err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+	outputFormat, err := cli.ParseOutputFormat(*format)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+
+	result, err := scaffold.Run(&scaffold.Config{
+		Language: *language,
+		Dir:      *dir,
+		Force:    *force,
+		Input:    os.Stdin,
+		Output:   os.Stderr,
+	})
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+
+	output := cli.NewOutput(outputFormat)
+	if output.IsStructuredFormat() {
+		_ = output.PrintStructured(result)
+		return
+	}
+	output.Success("Scaffolded %s project in %s", result.Language, result.Directory)
+	for _, file := range result.Files {
+		output.Println("  Created %s", file)
+	}
+}
+
+func stringFlag(fs *flag.FlagSet, name, short, value, usage string) *string {
+	result := fs.String(name, value, usage)
+	fs.StringVar(result, short, value, usage+" (short form)")
+	return result
+}
+
+func boolFlag(fs *flag.FlagSet, name, short string, value bool, usage string) *bool {
+	result := fs.Bool(name, value, usage)
+	fs.BoolVar(result, short, value, usage+" (short form)")
+	return result
 }

@@ -13,6 +13,7 @@ This directory contains the architectural decisions for `adr-rg` itself.
 | ADR-0005 | Explicit rationale for durable decisions | adopted |
 | ADR-0006 | Historical structured-output experiment | superseded |
 | ADR-0007 | JSON as canonical structured output | adopted |
+| ADR-0008 | Source installation and language scaffolding | adopted |
 
 ## Working with ADRs
 
@@ -20,7 +21,8 @@ This directory contains the architectural decisions for `adr-rg` itself.
 adr new --tags tooling --paths "internal/**" "Decision title"
 adr check adr --strict
 adr index
-adr bs-detector --base main
+adr detect-bs --base main
+adr scaffold --lang rust
 ```
 
 `index.yaml` is generated; use `adr index` rather than editing it manually. ADR
@@ -30,4 +32,4 @@ history is preserved when a decision is superseded.
 
 Every ADR contains `Context`, `Decision`, `Alternatives Considered`, and
 `Consequences`. Frontmatter may additionally declare constraints, invariants, and
-scope paths used by `bs-detector`.
+scope paths used by `detect-bs`.

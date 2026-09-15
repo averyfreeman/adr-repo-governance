@@ -75,7 +75,7 @@ Triggers: push to any branch, pull requests
 
 Steps:
 1. Checkout code
-2. Setup Go 1.25+
+2. Setup Go 1.26+
 3. Run `go test ./...`
 4. Run `golangci-lint`
 5. Build CLI: `go build ./cmd/adr`
@@ -87,7 +87,7 @@ Triggers: push tags matching `v*.*.*`
 
 Steps:
 1. Checkout code
-2. Setup Go 1.25+
+2. Setup Go 1.26+
 3. Run GoReleaser with `--clean` flag
 
 ### GoReleaser Configuration

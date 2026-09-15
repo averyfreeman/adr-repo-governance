@@ -5,21 +5,40 @@ Architecture Decision Records.
 
 ## Install
 
-From a checkout:
+Install from source with Go 1.26 or later:
 
 ~~~bash
-./scripts/install-adr.sh
-export PATH="$PWD/tools/adr:$PATH"
+go install github.com/averyfreeman/adr-repo-governance/cmd/adr@v0.2.0
 adr version
 ~~~
 
-Or install from source:
+From a checkout, use the Makefile for the XDG user-space layout:
 
 ~~~bash
-go install github.com/averyfreeman/adr-repo-governance/cmd/adr@v0.1.0
+make install
 ~~~
 
-Windows users can run `scripts/install-adr.ps1` from PowerShell.
+By default, the binary is copied to `~/.local/share/adr-rg/adr` and linked at
+`~/.local/bin/adr`. Set `XDG_DATA_HOME`, `XDG_BIN_HOME`, or `prefix` to change
+those locations. On macOS, `make install-mac-layout` uses
+`~/Library/Application Support/org.unixgreybeard.adr-rg` for the application
+files while keeping the same user-bin symlink.
+
+The release workflow still publishes checksummed archives, but this repository
+does not ship tar-download installer scripts.
+
+## Scaffold a repository
+
+Generate the standard agent files, language guidance, and editable Git policy:
+
+~~~bash
+adr scaffold --lang rust
+adr scaffold -l go -d ./new-project
+~~~
+
+Scaffolding only writes local files. It does not initialize Git, create a
+remote, commit, tag, or push. Existing files are handled interactively; use
+`--force` to overwrite them without prompting.
 
 ## Start a repository
 
@@ -54,8 +73,8 @@ The strict check validates every ADR. `adr index` regenerates derived metadata;
 ## Review a change
 
 ~~~bash
-adr bs-detector --base main
-adr bs-detector --base main --format json
+adr detect-bs --base main
+adr detect-bs --base main --format json
 ~~~
 
 The Bullshit Detector compares changed Git paths with the scopes on proposed and

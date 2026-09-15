@@ -22,7 +22,7 @@ constraints:
 invariants:
   - JSON consumers do not need an alternate parser for CLI integration
   - The ADR index is generated from ADR metadata
-  - bs-detector identifies decisions for review and does not claim semantic compliance
+  - detect-bs identifies decisions for review and does not claim semantic compliance
 supersedes:
   - ADR-0006
 superseded_by: []

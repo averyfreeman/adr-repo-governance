@@ -8,15 +8,18 @@ CLI.
 ## Development
 
 ```bash
-go test ./...
-go vet ./...
-go build ./cmd/adr
+make test
+make vet
+make build
 adr check adr --strict
 adr index --check
 ```
 
 Run `gofmt` on changed Go files. Prefer standard-library solutions and small,
 testable functions. Return contextual errors rather than panicking.
+
+Install a checkout locally with `make install`; use
+`make install-mac-layout` for the macOS application-data layout.
 
 ## User-facing changes
 
@@ -29,7 +32,7 @@ Use conventional commit subjects such as:
 ```text
 feat(cli): add ADR query filter
 fix(index): detect stale scope metadata
-docs(readme): clarify bs-detector behavior
+docs(readme): clarify detect-bs behavior
 ```
 
 Create or update an ADR when a change has long-term architectural consequences.

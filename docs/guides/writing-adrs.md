@@ -46,7 +46,7 @@ superseded_by: []
 related_adrs: []
 ~~~
 
-Scope paths are globs used by `adr bs-detector`. Keep them narrow enough to
+Scope paths are globs used by `adr detect-bs`. Keep them narrow enough to
 identify the code that genuinely deserves review.
 
 ## Constraints and invariants

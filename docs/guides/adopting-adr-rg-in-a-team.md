@@ -12,7 +12,7 @@ line of code.
 ## Make it part of the loop
 
 - Ask contributors and tools to run `adr list` or `adr show` before editing.
-- Run `adr bs-detector --base main` during review.
+- Run `adr detect-bs --base main` during review.
 - Use `--format json` when another tool consumes the result.
 
 ## Automate the boring checks

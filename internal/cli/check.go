@@ -137,16 +137,16 @@ func RunCheckADR(cfg *CheckADRConfig) (*CheckADRResult, error) {
 	return result, nil
 }
 
-// BSDetectorConfig holds configuration for the bs-detector command.
-type BSDetectorConfig struct {
+// DetectBSConfig holds configuration for the detect-bs command.
+type DetectBSConfig struct {
 	Dir    string
 	Base   string
 	Format OutputFormat
 	Output *Output
 }
 
-// BSDetectorResult holds the result of the bs-detector command.
-type BSDetectorResult struct {
+// DetectBSResult holds the result of the detect-bs command.
+type DetectBSResult struct {
 	ChangedFiles   []string           `json:"changed_files"`
 	ApplicableADRs []ApplicableADR    `json:"applicable_adrs"`
 	Summary        ConstraintsSummary `json:"summary"`
@@ -171,8 +171,8 @@ type ConstraintsSummary struct {
 	AllInvariants    []string `json:"all_invariants,omitempty"`
 }
 
-// RunBSDetector finds ADRs whose documented scope overlaps changed files.
-func RunBSDetector(cfg *BSDetectorConfig) (*BSDetectorResult, error) {
+// RunDetectBS finds ADRs whose documented scope overlaps changed files.
+func RunDetectBS(cfg *DetectBSConfig) (*DetectBSResult, error) {
 	// Get changed files from git
 	changedFiles, err := getChangedFiles(cfg.Base)
 	if err != nil {
@@ -185,7 +185,7 @@ func RunBSDetector(cfg *BSDetectorConfig) (*BSDetectorResult, error) {
 		return nil, fmt.Errorf("loading ADRs: %w", err)
 	}
 
-	result := &BSDetectorResult{
+	result := &DetectBSResult{
 		ChangedFiles:   changedFiles,
 		ApplicableADRs: make([]ApplicableADR, 0),
 	}

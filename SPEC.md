@@ -82,7 +82,8 @@ adr list [OPTIONS]
 adr show [OPTIONS] IDENTIFIER
 adr check adr [OPTIONS]
 adr index [OPTIONS]
-adr bs-detector --base REF [OPTIONS]
+adr detect-bs --base REF [OPTIONS]
+adr scaffold --lang LANG [OPTIONS]
 adr version
 ~~~
 
@@ -104,6 +105,34 @@ index unless --no-index is provided.
 | --paths GLOBS | Comma-separated scope globs |
 | --status STATUS | Initial lifecycle status |
 | --no-index | Do not refresh the generated index |
+| --format text\|json | Output format |
+
+### adr scaffold
+
+`scaffold` generates an offline project scaffold from the embedded language
+catalog. It writes agent guidance, language-specific development guidance,
+skills, `.gitignore`, README, and `.adr-scaffold.yaml` to the current directory
+unless `--dir` is supplied.
+
+~~~bash
+adr scaffold --lang rust
+adr scaffold -l go -d ./new-project
+~~~
+
+Supported profiles include `typescript`, `javascript`, `go`, `rust`, `c`,
+`cpp`, `html`, `haskell`, `lisp`/`clisp`, `lua`, `php`, `erlang`, `elixir`, and
+`generic`, with common aliases such as `ts`, `js`, `rs`, `golang`, and `c++`.
+
+The command never initializes Git, creates a remote, commits, tags, pushes, or
+uses the network. `.adr-scaffold.yaml` records those defaults for later review
+and editing. Existing files trigger an interactive collision prompt; `--force`
+overwrites them without prompting.
+
+| Option | Meaning |
+| --- | --- |
+| --lang LANG | Required language profile or alias |
+| --dir PATH | Target directory; default `.` |
+| --force | Overwrite existing files without prompting |
 | --format text\|json | Output format |
 
 ### adr list
@@ -159,15 +188,15 @@ the committed index matches current ADR metadata and never modifies the file.
 | --check | Check freshness without writing |
 | --format text\|json\|yaml | Output format |
 
-### adr bs-detector
+### adr detect-bs
 
-bs-detector runs git diff --name-only REF, loads ADRs from the selected
+detect-bs runs git diff --name-only REF, loads ADRs from the selected
 directory, and matches changed paths against each ADR’s scope.paths glob
 patterns.
 
 ~~~bash
-adr bs-detector --base main
-adr bs-detector --base main --format json
+adr detect-bs --base main
+adr detect-bs --base main --format json
 ~~~
 
 Only proposed and adopted ADRs are applicability candidates. Rejected,

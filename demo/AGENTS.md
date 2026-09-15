@@ -6,17 +6,13 @@ identifies applicable decisions but does not prove semantic code compliance.
 
 ## Pre-flight
 
-Install the pinned demo binary when needed:
+Install the CLI from source with Go 1.26 or later:
 
 ```bash
-# macOS/Linux
-./scripts/install-adr.sh
-export PATH="$PWD/tools/adr:$PATH"
-
-# Windows PowerShell
-.\scripts\install-adr.ps1
-$env:PATH = "$PWD\tools\adr;$env:PATH"
+go install github.com/averyfreeman/adr-repo-governance/cmd/adr@v0.2.0
 ```
+
+The demo intentionally has no tar-download installer scripts.
 
 Before and after significant changes, validate the ADR set:
 
@@ -27,7 +23,7 @@ adr check adr --dir docs/adr --strict
 When source files change, inspect applicable decisions with:
 
 ```bash
-adr bs-detector --dir docs/adr --base origin/main
+adr detect-bs --dir docs/adr --base origin/main
 ```
 
 Read the matching ADRs before changing governed code. Treat their constraints
@@ -44,6 +40,7 @@ adr list --dir docs/adr --tag database
 adr new --dir docs/adr --tags tag1,tag2 --paths "affected/**" "Your Decision Title"
 adr index --dir docs/adr
 adr index --dir docs/adr --check
+adr scaffold --lang rust --dir /tmp/adr-rust-example
 ```
 
 JSON is the integration format:

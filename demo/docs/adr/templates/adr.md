@@ -23,7 +23,13 @@ related_adrs: []
 
 ## Context
 
-Describe the context and background that led to this decision. What problem are we solving? What forces are at play?
+Describe the context and background that led to this decision:
+ 1. What problem are we solving?
+ 2. Why is solving this problem important?
+ 3. Is it part of a sequenced process (aka a dependency)?
+ 4. What are the most pertinent internal attributes?
+ 5. What are the most influential externalities?
+ 6. Consider the perceived future benefit of solving this problem vs. the null hypothesis (aka doing nothing). Are you sure you want to continue?
 
 Decision drivers:
 - Key driver 1 that influenced the decision

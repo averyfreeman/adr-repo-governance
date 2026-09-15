@@ -5,17 +5,15 @@ Records for a database, API, and frontend.
 
 ## Quick start
 
-Install the pinned, checksum-verified binary:
+Install the CLI from source with Go 1.26 or later:
 
 ~~~bash
-# macOS/Linux
-./scripts/install-adr.sh
-export PATH="$PWD/tools/adr:$PATH"
-
-# Windows PowerShell
-.scriptsinstall-adr.ps1
-$env:PATH = "$PWD	oolsadr;$env:PATH"
+go install github.com/averyfreeman/adr-repo-governance/cmd/adr@v0.2.0
 ~~~
+
+The demo no longer carries a tar-download installer. From the parent checkout,
+`make install` installs the CLI into the user-space layout; use
+`make install-mac-layout` for the macOS application-data layout.
 
 Validate and inspect the decisions:
 
@@ -34,8 +32,8 @@ applicability signal, not a semantic compliance proof.
 From a branch with the demo’s baseline available:
 
 ~~~bash
-adr bs-detector --dir docs/adr --base main
-adr bs-detector --dir docs/adr --base main --format json
+adr detect-bs --dir docs/adr --base origin/main
+adr detect-bs --dir docs/adr --base origin/main --format json
 ~~~
 
 The first form is for people; the second is for scripts and tools.
@@ -53,6 +51,18 @@ Each ADR needs `Context`, `Decision`, `Alternatives Considered`, and
 `Consequences`. Adopted and rejected options also follow the demo’s rationale
 pattern.
 
+## Try scaffolding
+
+Generate a language-specific project in a separate directory without Git or
+remote side effects:
+
+~~~bash
+adr scaffold --lang rust --dir /tmp/adr-rust-example
+~~~
+
+The generated `.adr-scaffold.yaml` contains editable version, commit, tag, and
+push defaults.
+
 ## Layout
 
 ~~~text
@@ -60,12 +70,6 @@ demo/
 ├── AGENTS.md
 ├── CLAUDE.md
 ├── README.md
-├── scripts/
-│   ├── install-adr.sh
-│   └── install-adr.ps1
-├── tools/
-│   ├── adr.version
-│   └── adr/
 ├── docs/adr/
 │   ├── README.md
 │   ├── index.yaml

@@ -7,7 +7,7 @@ the durable ADR store and deterministic checks.
 Before changing code:
 
 ```bash
-adr bs-detector --base main --format json
+adr detect-bs --base main --format json
 ```
 
 Before finishing:
@@ -15,8 +15,10 @@ Before finishing:
 ```bash
 adr check adr --strict
 adr index --check
-go test ./...
+make test
+make vet
+make build
 ```
 
-Use `adr index` after changing ADR metadata. Treat `bs-detector` results as
+Use `adr index` after changing ADR metadata. Treat `detect-bs` results as
 decisions requiring review, not as semantic compliance proof.
