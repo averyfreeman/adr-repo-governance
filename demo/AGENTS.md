@@ -9,7 +9,7 @@ identifies applicable decisions but does not prove semantic code compliance.
 Install the CLI from source with Go 1.26 or later:
 
 ```bash
-go install github.com/averyfreeman/adr-repo-governance/cmd/adr@v0.2.0
+go install github.com/averyfreeman/adr-repo-governance/cmd/adr@v0.2.1
 ```
 
 The demo intentionally has no tar-download installer scripts.

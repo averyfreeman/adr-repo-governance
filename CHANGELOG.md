@@ -2,6 +2,13 @@
 
 All notable changes to `adr-rg` are documented here.
 
+## [0.2.1] - 2026-09-15
+
+### Removed
+
+- Removed obsolete structured-output decision records and references.
+- Renumbered retained ADRs so the repository sequence remains contiguous.
+
 ## [0.2.0] - 2026-09-15
 
 ### Added

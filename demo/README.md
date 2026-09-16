@@ -8,7 +8,7 @@ Records for a database, API, and frontend.
 Install the CLI from source with Go 1.26 or later:
 
 ~~~bash
-go install github.com/averyfreeman/adr-repo-governance/cmd/adr@v0.2.0
+go install github.com/averyfreeman/adr-repo-governance/cmd/adr@v0.2.1
 ~~~
 
 The demo no longer carries a tar-download installer. From the parent checkout,

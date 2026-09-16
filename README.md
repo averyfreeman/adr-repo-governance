@@ -16,7 +16,7 @@ editable Git defaults. The scope review command is `adr detect-bs`.
 Install from source:
 
 ~~~bash
-go install github.com/averyfreeman/adr-repo-governance/cmd/adr@v0.2.0
+go install github.com/averyfreeman/adr-repo-governance/cmd/adr@v0.2.1
 ~~~
 
 From a checkout, install into the XDG user-space layout:

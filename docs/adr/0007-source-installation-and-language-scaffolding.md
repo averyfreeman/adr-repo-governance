@@ -1,5 +1,5 @@
 ---
-adr_id: ADR-0008
+adr_id: ADR-0007
 title: "Source Installation and Language Scaffolding"
 status: adopted
 date: 2026-09-15
@@ -38,10 +38,10 @@ superseded_by: []
 related_adrs:
   - ADR-0001
   - ADR-0004
-  - ADR-0007
+  - ADR-0006
 ---
 
-# ADR-0008: Source Installation and Language Scaffolding
+# ADR-0007: Source Installation and Language Scaffolding
 
 ## Context
 

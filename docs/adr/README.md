@@ -11,9 +11,8 @@ This directory contains the architectural decisions for `adr-rg` itself.
 | ADR-0003 | Repository layout and generated index | adopted |
 | ADR-0004 | GoReleaser and GitHub Actions releases | adopted |
 | ADR-0005 | Explicit rationale for durable decisions | adopted |
-| ADR-0006 | Historical structured-output experiment | superseded |
-| ADR-0007 | JSON as canonical structured output | adopted |
-| ADR-0008 | Source installation and language scaffolding | adopted |
+| ADR-0006 | JSON as canonical structured output | adopted |
+| ADR-0007 | Source installation and language scaffolding | adopted |
 
 ## Working with ADRs
 
@@ -26,7 +25,7 @@ adr scaffold --lang rust
 ```
 
 `index.yaml` is generated; use `adr index` rather than editing it manually. ADR
-history is preserved when a decision is superseded.
+retained decisions remain queryable through the generated index.
 
 ## Required sections
 

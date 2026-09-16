@@ -8,7 +8,7 @@ Architecture Decision Records.
 Install from source with Go 1.26 or later:
 
 ~~~bash
-go install github.com/averyfreeman/adr-repo-governance/cmd/adr@v0.2.0
+go install github.com/averyfreeman/adr-repo-governance/cmd/adr@v0.2.1
 adr version
 ~~~
 
