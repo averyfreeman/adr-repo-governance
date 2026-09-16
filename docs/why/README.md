@@ -23,7 +23,7 @@ People and coding tools can query a bounded slice of repository context:
 ~~~bash
 adr list --path "src/db/users.go"
 adr show ADR-0001
-adr detect-bs --base main --format json
+adr review --base main --json
 ~~~
 
 The result is a better starting point, not an architecture oracle. The caller

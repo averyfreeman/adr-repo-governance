@@ -2,7 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"path/filepath"
 
 	"github.com/averyfreeman/adr-repo-governance/internal/adr"
 	"github.com/averyfreeman/adr-repo-governance/internal/glob"
@@ -15,6 +14,7 @@ type ListConfig struct {
 	Status string
 	Tags   []string
 	Path   string
+	Paths  []string
 	Format OutputFormat
 	Output *Output
 }
@@ -38,51 +38,32 @@ type ListResult struct {
 func RunList(cfg *ListConfig) (*ListResult, error) {
 	entries := make([]ListEntry, 0)
 
-	// Try to use index if it exists
-	indexPath := filepath.Join(cfg.Dir, index.IndexFilename)
-	idx, err := index.Load(indexPath)
-	if err == nil {
-		// Use index
-		for _, e := range idx.ADRs {
-			if !matchesFilters(e, cfg) {
-				continue
-			}
-			entries = append(entries, ListEntry{
-				ADRID:  e.ADRID,
-				Title:  e.Title,
-				Status: e.Status,
-				Date:   e.Date,
-				File:   e.File,
-			})
-		}
-	} else {
-		// Fallback: scan ADR files
-		adrs, err := adr.LoadAllADRs(cfg.Dir)
-		if err != nil {
-			return nil, fmt.Errorf("loading ADRs: %w", err)
-		}
+	// Source ADR files are authoritative; index.yaml is a derived artifact.
+	adrs, err := adr.LoadAllADRs(cfg.Dir)
+	if err != nil {
+		return nil, fmt.Errorf("loading ADRs: %w", err)
+	}
 
-		for _, a := range adrs {
-			entry := index.Entry{
-				ADRID:      a.Frontmatter.ADRID,
-				Title:      a.Frontmatter.Title,
-				Status:     string(a.Frontmatter.Status),
-				Date:       a.Frontmatter.Date,
-				Tags:       a.Frontmatter.Tags,
-				ScopePaths: a.Frontmatter.Scope.Paths,
-				File:       a.Filename,
-			}
-			if !matchesFilters(entry, cfg) {
-				continue
-			}
-			entries = append(entries, ListEntry{
-				ADRID:  a.Frontmatter.ADRID,
-				Title:  a.Frontmatter.Title,
-				Status: string(a.Frontmatter.Status),
-				Date:   a.Frontmatter.Date,
-				File:   a.Filename,
-			})
+	for _, a := range adrs {
+		entry := index.Entry{
+			ADRID:      a.Frontmatter.ADRID,
+			Title:      a.Frontmatter.Title,
+			Status:     string(a.Frontmatter.Status),
+			Date:       a.Frontmatter.Date,
+			Tags:       a.Frontmatter.Tags,
+			ScopePaths: a.Frontmatter.Scope.Paths,
+			File:       a.Filename,
 		}
+		if !matchesFilters(entry, cfg) {
+			continue
+		}
+		entries = append(entries, ListEntry{
+			ADRID:  a.Frontmatter.ADRID,
+			Title:  a.Frontmatter.Title,
+			Status: string(a.Frontmatter.Status),
+			Date:   a.Frontmatter.Date,
+			File:   a.Filename,
+		})
 	}
 
 	result := &ListResult{
@@ -134,12 +115,21 @@ func matchesFilters(entry index.Entry, cfg *ListConfig) bool {
 		}
 	}
 
-	// Filter by path (matches against scope.paths)
+	// Filter by path (matches against scope.paths). Path filters are ORed.
+	pathFilters := append([]string{}, cfg.Paths...)
 	if cfg.Path != "" {
+		pathFilters = append(pathFilters, cfg.Path)
+	}
+	if len(pathFilters) > 0 {
 		found := false
-		for _, scopePath := range entry.ScopePaths {
-			if glob.Match(scopePath, cfg.Path) {
-				found = true
+		for _, filterPath := range pathFilters {
+			for _, scopePath := range entry.ScopePaths {
+				if glob.Match(scopePath, filterPath) {
+					found = true
+					break
+				}
+			}
+			if found {
 				break
 			}
 		}

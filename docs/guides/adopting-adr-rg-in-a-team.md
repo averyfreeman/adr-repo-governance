@@ -12,12 +12,12 @@ line of code.
 ## Make it part of the loop
 
 - Ask contributors and tools to run `adr list` or `adr show` before editing.
-- Run `adr detect-bs --base main` during review.
+- Run `adr review --base main` during review (`detect-bs` remains an alias).
 - Use `--format json` when another tool consumes the result.
 
 ## Automate the boring checks
 
-- Run `adr check adr --strict` in CI.
+- Run `adr check --strict` in CI.
 - Run `adr index --check` to catch stale generated metadata.
 - Ask for explicit human review when the Bullshit Detector reports an applicable
   decision.

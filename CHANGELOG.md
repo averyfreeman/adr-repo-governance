@@ -2,6 +2,22 @@
 
 All notable changes to `adr-rg` are documented here.
 
+## [0.3.0] - 2026-09-16
+
+### Added
+
+- Added canonical `adr check` and `adr review` commands while retaining
+  `check adr` and `detect-bs` compatibility aliases.
+- Added global `--dir`, `--format`, and `--json` options, repeatable tag/path
+  filters, positional scaffold languages, and automatic Git base detection.
+
+### Changed
+
+- Made ADR source files authoritative for `adr list` so stale indexes cannot
+  hide frontmatter changes.
+- Made `adr init` regenerate the index from existing ADRs and made `adr new`
+  reuse the initialized ADR template when available.
+
 ## [0.2.1] - 2026-09-15
 
 ### Removed

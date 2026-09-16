@@ -1,4 +1,4 @@
-.PHONY: fmt test vet build install install-mac-layout container-binary build-container publish-container check adr-check adr-check-strict index-check detect-bs
+.PHONY: fmt test vet build install install-mac-layout container-binary build-container publish-container check adr-check adr-check-strict index-check review detect-bs
 
 GO ?= go
 BASE ?= origin/main
@@ -71,15 +71,17 @@ publish-container: build-container
 	$(DOCKER) push "$(CONTAINER_IMAGE)"
 
 adr-check: build
-	$(BINARY) check adr
+	$(BINARY) check
 
 adr-check-strict: build
-	$(BINARY) check adr --strict
+	$(BINARY) check --strict
 
 index-check: build
 	$(BINARY) index --check
 
-detect-bs: build
-	$(BINARY) detect-bs --base $(BASE)
+review: build
+	$(BINARY) review --base $(BASE)
+
+detect-bs: review
 
 check: fmt test vet build adr-check-strict index-check

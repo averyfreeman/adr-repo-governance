@@ -8,7 +8,7 @@ Records for a database, API, and frontend.
 Install the CLI from source with Go 1.26 or later:
 
 ~~~bash
-go install github.com/averyfreeman/adr-repo-governance/cmd/adr@v0.2.1
+go install github.com/averyfreeman/adr-repo-governance/cmd/adr@v0.3.0
 ~~~
 
 The demo no longer carries a tar-download installer. From the parent checkout,
@@ -18,7 +18,7 @@ The demo no longer carries a tar-download installer. From the parent checkout,
 Validate and inspect the decisions:
 
 ~~~bash
-adr check adr --dir docs/adr --strict
+adr check --dir docs/adr --strict
 adr list --dir docs/adr
 adr list --dir docs/adr --path "src/db/users.go"
 adr show --dir docs/adr ADR-0001
@@ -32,8 +32,8 @@ applicability signal, not a semantic compliance proof.
 From a branch with the demo’s baseline available:
 
 ~~~bash
-adr detect-bs --dir docs/adr --base origin/main
-adr detect-bs --dir docs/adr --base origin/main --format json
+adr review --dir docs/adr --base origin/main
+adr review --dir docs/adr --base origin/main --json
 ~~~
 
 The first form is for people; the second is for scripts and tools.
@@ -41,8 +41,8 @@ The first form is for people; the second is for scripts and tools.
 ## Create and maintain decisions
 
 ~~~bash
-adr new --dir docs/adr --tags performance --paths "src/**" "Add Caching"
-adr check adr --dir docs/adr --strict
+adr new --dir docs/adr --tag performance --path "src/**" "Add Caching"
+adr check --dir docs/adr --strict
 adr index --dir docs/adr
 adr index --dir docs/adr --check
 ~~~
@@ -57,7 +57,7 @@ Generate a language-specific project in a separate directory without Git or
 remote side effects:
 
 ~~~bash
-adr scaffold --lang rust --dir /tmp/adr-rust-example
+adr scaffold --dir /tmp/adr-rust-example rust
 ~~~
 
 The generated `.adr-scaffold.yaml` contains editable version, commit, tag, and

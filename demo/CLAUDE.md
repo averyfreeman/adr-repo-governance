@@ -4,8 +4,8 @@ Follow [AGENTS.md](AGENTS.md) for the complete, tool-neutral workflow. The
 commands below are the normal `adr-rg` integration points for this demo:
 
 ```bash
-adr check adr --dir docs/adr --strict
-adr detect-bs --dir docs/adr --base origin/main
+adr check --dir docs/adr --strict
+adr review --dir docs/adr --base origin/main
 adr list --dir docs/adr --path "src/api/**"
 adr show --dir docs/adr ADR-0001
 adr index --dir docs/adr --check

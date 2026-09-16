@@ -15,20 +15,20 @@ scope paths.
 ## Commands
 
 ~~~bash
-adr check adr --dir docs/adr --strict
+adr check --dir docs/adr --strict
 adr list --dir docs/adr
 adr list --dir docs/adr --path "src/db/users.go"
 adr show --dir docs/adr ADR-0001
-adr detect-bs --dir docs/adr --base main
+adr review --dir docs/adr --base main
 adr index --dir docs/adr
 adr index --dir docs/adr --check
-adr scaffold --lang rust --dir /tmp/adr-rust-example
+adr scaffold --dir /tmp/adr-rust-example rust
 ~~~
 
 Create a record with:
 
 ~~~bash
-adr new --dir docs/adr --tags tag1 --paths "affected/**" "Your Decision"
+adr new --dir docs/adr --tag tag1 --path "affected/**" "Your Decision"
 ~~~
 
 Complete every required section before the strict check. Use `--format json`

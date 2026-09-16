@@ -76,33 +76,39 @@ existing entries with a freshly generated index while ignoring its timestamp.
 ## Commands
 
 ~~~text
-adr init [--dir PATH] [--format text|json]
+adr [GLOBAL OPTIONS] <command> [OPTIONS]
+adr init [OPTIONS]
 adr new [OPTIONS] TITLE
 adr list [OPTIONS]
 adr show [OPTIONS] IDENTIFIER
-adr check adr [OPTIONS]
+adr check [OPTIONS]
 adr index [OPTIONS]
-adr detect-bs --base REF [OPTIONS]
-adr scaffold --lang LANG [OPTIONS]
+adr review [--base REF] [OPTIONS]
+adr scaffold [LANG] [OPTIONS]
 adr version
 ~~~
 
+Global `--dir`/`-d`, `--format`/`-o`, and `--json` options may appear before
+the command. The same options remain available after each command for
+compatibility. `adr detect-bs` is an alias for `adr review`.
+
 ### adr init
 
-Creates the ADR directory, templates/adr.md, and index.yaml when they do not
-exist. --dir changes the target directory. JSON output contains adr_dir,
-template, and index paths.
+Creates the ADR directory and templates/adr.md when they do not exist, then
+generates index.yaml from any ADR files already present. --dir changes the
+target directory. JSON output contains adr_dir, template, and index paths.
 
 ### adr new
 
-Creates the next numbered ADR with status proposed by default and refreshes the
-index unless --no-index is provided.
+Creates the next numbered ADR with status proposed by default from the
+initialized templates/adr.md when available, falling back to the embedded
+template otherwise. It refreshes the index unless --no-index is provided.
 
 | Option | Meaning |
 | --- | --- |
 | --dir PATH | ADR directory; default docs/adr |
-| --tags TAGS | Comma-separated tags |
-| --paths GLOBS | Comma-separated scope globs |
+| --tags TAGS, --tag TAG | Repeatable tags; comma-separated values remain supported |
+| --paths GLOBS, --path GLOB | Repeatable scope globs; comma-separated values remain supported |
 | --status STATUS | Initial lifecycle status |
 | --no-index | Do not refresh the generated index |
 | --format text\|json | Output format |
@@ -115,8 +121,8 @@ skills, `.gitignore`, README, and `.adr-scaffold.yaml` to the current directory
 unless `--dir` is supplied.
 
 ~~~bash
-adr scaffold --lang rust
-adr scaffold -l go -d ./new-project
+adr scaffold rust
+adr scaffold --lang go --dir ./new-project
 ~~~
 
 Supported profiles include `typescript`, `javascript`, `go`, `rust`, `c`,
@@ -130,27 +136,28 @@ overwrites them without prompting.
 
 | Option | Meaning |
 | --- | --- |
-| --lang LANG | Required language profile or alias |
+| --lang LANG | Language profile or alias; may also be positional |
 | --dir PATH | Target directory; default `.` |
 | --force | Overwrite existing files without prompting |
 | --format text\|json | Output format |
 
 ### adr list
 
-Lists ADR metadata from the generated index when available, otherwise from ADR
-files. Filters are combined as requested; --tag matches an ADR containing that
+Lists ADR metadata from the current ADR files. The generated index is not used
+as a potentially stale cache; --tag matches an ADR containing any requested
 tag, and --path matches a declared scope path.
 
 | Option | Meaning |
 | --- | --- |
 | --dir PATH | ADR directory; default docs/adr |
 | --status STATUS | Filter by lifecycle status |
-| --tag TAG | Filter by tag |
-| --path PATH | Filter by scope-path match |
+| --tag TAG | Repeatable filter by tag; comma-separated values remain supported |
+| --path PATH | Repeatable filter by scope-path match; comma-separated values remain supported |
 | --format text\|json | Output format |
 
 JSON output has the shape { "count": N, "adrs": [...] }. Each entry contains
-adr_id, title, status, date, and file.
+adr_id, title, status, date, and file. Repeated tag or path filters are ORed
+within their category; status and other categories are combined with them.
 
 ### adr show
 
@@ -164,9 +171,10 @@ Displays one ADR selected by ADR-NNNN, a numeric ID, or a filename.
 JSON output includes identity, status, date, tags, scope paths, constraints,
 invariants, the extracted decision section, and filename.
 
-### adr check adr
+### adr check
 
-Validates every ADR in the selected directory.
+Validates every ADR in the selected directory. The former `adr check adr` form
+remains a compatibility alias.
 
 | Option | Meaning |
 | --- | --- |
@@ -188,15 +196,17 @@ the committed index matches current ADR metadata and never modifies the file.
 | --check | Check freshness without writing |
 | --format text\|json\|yaml | Output format |
 
-### adr detect-bs
+### adr review
 
-detect-bs runs git diff --name-only REF, loads ADRs from the selected
+review runs git diff --name-only REF, loads ADRs from the selected
 directory, and matches changed paths against each ADR’s scope.paths glob
-patterns.
+patterns. If --base is omitted, the CLI uses an unambiguous `origin/HEAD`,
+`origin/main`, or `main` reference when available. `detect-bs` remains a
+compatibility alias.
 
 ~~~bash
-adr detect-bs --base main
-adr detect-bs --base main --format json
+adr review
+adr review --base main --json
 ~~~
 
 Only proposed and adopted ADRs are applicability candidates. Rejected,
@@ -216,7 +226,7 @@ the implementation is compliant.
 
 | Option | Meaning |
 | --- | --- |
-| --base REF | Required Git ref passed to git diff --name-only |
+| --base REF | Optional Git ref passed to git diff --name-only; auto-detected when unambiguous |
 | --dir PATH | ADR directory; default docs/adr |
 | --format text\|json | Output format |
 

@@ -20,7 +20,7 @@ constraints:
 invariants:
   - "Every ADR decision has explicit trade-off documentation"
   - "Every rejected alternative acknowledges its strengths"
-  - "Rationale pattern validation is part of adr check adr"
+  - "Rationale pattern validation is part of adr check"
 supersedes: []
 superseded_by: []
 related_adrs:
@@ -54,7 +54,7 @@ All ADRs in this repository MUST use an explicit rationale pattern with mandator
 - Forces authors to articulate concrete reasons, not just preferences
 - Creates symmetry between adoption and rejection reasoning
 - Makes trade-offs explicit and reviewable
-- Enables automated validation via `adr check adr`
+- Enables automated validation via `adr check`
 - Provides AI agents with predictable structure for parsing decisions
 - Reduces hindsight bias by requiring "despite" sections upfront
 
@@ -95,7 +95,7 @@ For each **rejected option**:
 ### Enforcement
 
 - `adr new` generates ADR templates with the pattern structure
-- `adr check adr` validates presence of required headings
+- `adr check` validates presence of required headings
 - Default mode: warns on missing pattern
 - Strict mode (`--strict`): fails with exit code 2 on missing pattern
 
@@ -162,4 +162,4 @@ When creating or reviewing ADRs:
 - Always include both "because" AND "despite" sections
 - Never use only pros/cons tables
 - If "despite" is difficult to write, consider whether the analysis is complete
-- Run `adr check adr --strict` before finalizing
+- Run `adr check --strict` before finalizing

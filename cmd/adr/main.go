@@ -26,25 +26,33 @@ func main() {
 		os.Exit(1)
 	}
 
-	command := os.Args[1]
+	global, command, args, err := parseGlobalOptions(os.Args[1:])
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+	if command == "" {
+		printUsage()
+		os.Exit(1)
+	}
 
 	switch command {
 	case "init":
-		runInit(os.Args[2:])
+		runInit(args, global)
 	case "new":
-		runNew(os.Args[2:])
+		runNew(args, global)
 	case "index":
-		runIndex(os.Args[2:])
+		runIndex(args, global)
 	case "list":
-		runList(os.Args[2:])
+		runList(args, global)
 	case "show":
-		runShow(os.Args[2:])
+		runShow(args, global)
 	case "check":
-		runCheck(os.Args[2:])
-	case "detect-bs":
-		runDetectBS(os.Args[2:])
+		runCheck(args, global)
+	case "review", "detect-bs":
+		runDetectBS(args, global, command)
 	case "scaffold":
-		runScaffold(os.Args[2:])
+		runScaffold(args, global)
 	case "version":
 		printVersion()
 	case "help", "-h", "--help":
@@ -60,7 +68,12 @@ func printUsage() {
 	fmt.Println(`adr-rg - Git-native ADR governance
 
 Usage:
-  adr <command> [options]
+  adr [global options] <command> [options]
+
+Global options:
+  --dir PATH       ADR directory or scaffold target override
+  --format FORMAT  Output format override (text|json, or yaml for index)
+  --json           Shorthand for --format json
 
 Commands:
   init          Initialize ADR directory structure
@@ -69,7 +82,8 @@ Commands:
   list          List ADRs with optional filters
   show          Display details of an ADR
   check         Validate ADRs
-  detect-bs     Detect ADRs relevant to changed files
+  review        Find ADRs relevant to changed files
+  detect-bs     Compatibility alias for review
   scaffold      Generate a language-specific project scaffold
   version       Show version information
   help          Show this help message
@@ -83,23 +97,22 @@ func printVersion() {
 	fmt.Printf("  built:  %s\n", date)
 }
 
-func runInit(args []string) {
+func runInit(args []string, global globalOptions) {
 	fs := flag.NewFlagSet("init", flag.ExitOnError)
-	dir := stringFlag(fs, "dir", "d", defaultADRDir, "ADR directory path")
-	format := stringFlag(fs, "format", "o", "text", "Output format (text|json)")
+	common := addCommonFlags(fs, defaultADRDir, global, "Output format (text|json)")
 	if err := fs.Parse(args); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 
-	outputFormat, err := cli.ParseOutputFormat(*format)
+	outputFormat, err := common.outputFormat(false)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 
 	cfg := &cli.InitConfig{
-		Dir:    *dir,
+		Dir:    *common.Dir,
 		Output: cli.NewOutput(outputFormat),
 	}
 
@@ -109,14 +122,15 @@ func runInit(args []string) {
 	}
 }
 
-func runNew(args []string) {
+func runNew(args []string, global globalOptions) {
 	fs := flag.NewFlagSet("new", flag.ExitOnError)
-	dir := stringFlag(fs, "dir", "d", defaultADRDir, "ADR directory path")
-	tags := stringFlag(fs, "tags", "t", "", "Comma-separated tags")
-	paths := stringFlag(fs, "paths", "p", "", "Comma-separated scope paths (globs)")
+	common := addCommonFlags(fs, defaultADRDir, global, "Output format (text|json)")
+	tags := stringListFlag(fs, "tags", "t", "Tags")
+	fs.Var(tags, "tag", "Alias for --tags")
+	paths := stringListFlag(fs, "paths", "p", "Scope paths (globs)")
+	fs.Var(paths, "path", "Alias for --paths")
 	status := stringFlag(fs, "status", "s", "proposed", "Initial status")
 	noIndex := boolFlag(fs, "no-index", "n", false, "Skip updating index")
-	format := stringFlag(fs, "format", "o", "text", "Output format (text|json)")
 
 	fs.Usage = func() {
 		fmt.Println("Usage: adr new [options] <title>")
@@ -140,31 +154,17 @@ func runNew(args []string) {
 
 	title := strings.Join(fs.Args(), " ")
 
-	outputFormat, err := cli.ParseOutputFormat(*format)
+	outputFormat, err := common.outputFormat(false)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 
-	var tagList []string
-	if *tags != "" {
-		for _, t := range strings.Split(*tags, ",") {
-			tagList = append(tagList, strings.TrimSpace(t))
-		}
-	}
-
-	var pathList []string
-	if *paths != "" {
-		for _, p := range strings.Split(*paths, ",") {
-			pathList = append(pathList, strings.TrimSpace(p))
-		}
-	}
-
 	cfg := &cli.NewConfig{
 		Title:   title,
-		Dir:     *dir,
-		Tags:    tagList,
-		Paths:   pathList,
+		Dir:     *common.Dir,
+		Tags:    []string(*tags),
+		Paths:   []string(*paths),
 		Status:  *status,
 		NoIndex: *noIndex,
 		Format:  outputFormat,
@@ -177,24 +177,23 @@ func runNew(args []string) {
 	}
 }
 
-func runIndex(args []string) {
+func runIndex(args []string, global globalOptions) {
 	fs := flag.NewFlagSet("index", flag.ExitOnError)
-	dir := stringFlag(fs, "dir", "d", defaultADRDir, "ADR directory path")
+	common := addCommonFlags(fs, defaultADRDir, global, "Output format (text|json|yaml)")
 	check := boolFlag(fs, "check", "c", false, "Check if index is up-to-date (don't modify)")
-	format := stringFlag(fs, "format", "o", "text", "Output format (text|json|yaml)")
 	if err := fs.Parse(args); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 
-	outputFormat, err := cli.ParseIndexOutputFormat(*format)
+	outputFormat, err := common.outputFormat(true)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 
 	cfg := &cli.IndexConfig{
-		Dir:    *dir,
+		Dir:    *common.Dir,
 		Check:  *check,
 		Format: outputFormat,
 		Output: cli.NewOutput(outputFormat),
@@ -210,34 +209,28 @@ func runIndex(args []string) {
 	}
 }
 
-func runList(args []string) {
+func runList(args []string, global globalOptions) {
 	fs := flag.NewFlagSet("list", flag.ExitOnError)
-	dir := stringFlag(fs, "dir", "d", defaultADRDir, "ADR directory path")
+	common := addCommonFlags(fs, defaultADRDir, global, "Output format (text|json)")
 	status := stringFlag(fs, "status", "s", "", "Filter by status")
-	tag := stringFlag(fs, "tag", "t", "", "Filter by tag")
-	path := stringFlag(fs, "path", "p", "", "Filter by scope path match")
-	format := stringFlag(fs, "format", "o", "text", "Output format (text|json)")
+	tag := stringListFlag(fs, "tag", "t", "Filter by tag")
+	path := stringListFlag(fs, "path", "p", "Filter by scope path match")
 	if err := fs.Parse(args); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 
-	outputFormat, err := cli.ParseOutputFormat(*format)
+	outputFormat, err := common.outputFormat(false)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 
-	var tags []string
-	if *tag != "" {
-		tags = []string{*tag}
-	}
-
 	cfg := &cli.ListConfig{
-		Dir:    *dir,
+		Dir:    *common.Dir,
 		Status: *status,
-		Tags:   tags,
-		Path:   *path,
+		Tags:   []string(*tag),
+		Paths:  []string(*path),
 		Format: outputFormat,
 		Output: cli.NewOutput(outputFormat),
 	}
@@ -248,10 +241,9 @@ func runList(args []string) {
 	}
 }
 
-func runShow(args []string) {
+func runShow(args []string, global globalOptions) {
 	fs := flag.NewFlagSet("show", flag.ExitOnError)
-	dir := stringFlag(fs, "dir", "d", defaultADRDir, "ADR directory path")
-	format := stringFlag(fs, "format", "o", "text", "Output format (text|json)")
+	common := addCommonFlags(fs, defaultADRDir, global, "Output format (text|json)")
 
 	fs.Usage = func() {
 		fmt.Println("Usage: adr show [options] <ADR-ID|number|filename>")
@@ -273,7 +265,7 @@ func runShow(args []string) {
 		os.Exit(1)
 	}
 
-	outputFormat, err := cli.ParseOutputFormat(*format)
+	outputFormat, err := common.outputFormat(false)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
@@ -281,7 +273,7 @@ func runShow(args []string) {
 
 	cfg := &cli.ShowConfig{
 		ID:     fs.Arg(0),
-		Dir:    *dir,
+		Dir:    *common.Dir,
 		Format: outputFormat,
 		Output: cli.NewOutput(outputFormat),
 	}
@@ -292,44 +284,34 @@ func runShow(args []string) {
 	}
 }
 
-func runCheck(args []string) {
-	if len(args) < 1 {
-		fmt.Fprintln(os.Stderr, "Usage: adr check adr [options]")
-		fmt.Fprintln(os.Stderr, "")
-		fmt.Fprintln(os.Stderr, "Subcommands:")
-		fmt.Fprintln(os.Stderr, "  adr       Validate ADR files")
-		os.Exit(1)
+func runCheck(args []string, global globalOptions) {
+	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
+		if args[0] != "adr" {
+			fmt.Fprintf(os.Stderr, "Unknown check subcommand: %s\n", args[0])
+			os.Exit(1)
+		}
+		args = args[1:]
 	}
-
-	subCmd := args[0]
-
-	switch subCmd {
-	case "adr":
-		runCheckADR(args[1:])
-	default:
-		fmt.Fprintf(os.Stderr, "Unknown check subcommand: %s\n", subCmd)
-		os.Exit(1)
-	}
+	runCheckADR(args, global)
 }
 
-func runCheckADR(args []string) {
-	fs := flag.NewFlagSet("check adr", flag.ExitOnError)
-	dir := stringFlag(fs, "dir", "d", defaultADRDir, "ADR directory path")
+func runCheckADR(args []string, global globalOptions) {
+	fs := flag.NewFlagSet("check", flag.ExitOnError)
+	common := addCommonFlags(fs, defaultADRDir, global, "Output format (text|json)")
 	strict := boolFlag(fs, "strict", "s", false, "Treat warnings as errors (fail on missing rationale pattern)")
-	format := stringFlag(fs, "format", "o", "text", "Output format (text|json)")
 	if err := fs.Parse(args); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 
-	outputFormat, err := cli.ParseOutputFormat(*format)
+	outputFormat, err := common.outputFormat(false)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 
 	cfg := &cli.CheckADRConfig{
-		Dir:    *dir,
+		Dir:    *common.Dir,
 		Strict: *strict,
 		Format: outputFormat,
 		Output: cli.NewOutput(outputFormat),
@@ -346,16 +328,15 @@ func runCheckADR(args []string) {
 	}
 }
 
-func runDetectBS(args []string) {
-	fs := flag.NewFlagSet("detect-bs", flag.ExitOnError)
-	dir := stringFlag(fs, "dir", "d", defaultADRDir, "ADR directory path")
-	base := stringFlag(fs, "base", "b", "", "Base ref for git diff (required)")
-	format := stringFlag(fs, "format", "o", "text", "Output format (text|json)")
+func runDetectBS(args []string, global globalOptions, commandName string) {
+	fs := flag.NewFlagSet(commandName, flag.ExitOnError)
+	common := addCommonFlags(fs, defaultADRDir, global, "Output format (text|json)")
+	base := stringFlag(fs, "base", "b", cli.DefaultBaseRef(), "Base ref for git diff (auto-detected when unambiguous)")
 
 	fs.Usage = func() {
-		fmt.Println("Usage: adr detect-bs --base <ref> [options]")
+		fmt.Printf("Usage: adr %s [--base <ref>] [options]\n", commandName)
 		fmt.Println()
-		fmt.Println("Detect ADRs whose documented scope overlaps files changed since <base>.")
+		fmt.Println("Find ADRs whose documented scope overlaps changed files.")
 		fmt.Println()
 		fmt.Println("Options:")
 		fs.PrintDefaults()
@@ -367,19 +348,19 @@ func runDetectBS(args []string) {
 	}
 
 	if *base == "" {
-		fmt.Fprintln(os.Stderr, "error: --base is required")
+		fmt.Fprintln(os.Stderr, "error: --base is required when no unambiguous Git base can be detected")
 		fs.Usage()
 		os.Exit(1)
 	}
 
-	outputFormat, err := cli.ParseOutputFormat(*format)
+	outputFormat, err := common.outputFormat(false)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 
 	cfg := &cli.DetectBSConfig{
-		Dir:    *dir,
+		Dir:    *common.Dir,
 		Base:   *base,
 		Format: outputFormat,
 		Output: cli.NewOutput(outputFormat),
@@ -391,15 +372,14 @@ func runDetectBS(args []string) {
 	}
 }
 
-func runScaffold(args []string) {
+func runScaffold(args []string, global globalOptions) {
 	fs := flag.NewFlagSet("scaffold", flag.ExitOnError)
-	language := stringFlag(fs, "lang", "l", "", "Language template (required)")
-	dir := stringFlag(fs, "dir", "d", ".", "Target directory")
+	language := stringFlag(fs, "lang", "l", "", "Language template (may be positional)")
+	common := addCommonFlags(fs, ".", global, "Output format (text|json)")
 	force := boolFlag(fs, "force", "F", false, "Overwrite existing files without prompting")
-	format := stringFlag(fs, "format", "o", "text", "Output format (text|json)")
 
 	fs.Usage = func() {
-		fmt.Println("Usage: adr scaffold --lang <language> [options]")
+		fmt.Println("Usage: adr scaffold [--lang <language>|<language>] [options]")
 		fmt.Println()
 		fmt.Println("Generate an offline, language-specific project scaffold.")
 		fmt.Println()
@@ -413,7 +393,22 @@ func runScaffold(args []string) {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
-	outputFormat, err := cli.ParseOutputFormat(*format)
+	if *language == "" {
+		if fs.NArg() == 1 {
+			*language = fs.Arg(0)
+		} else if fs.NArg() > 1 {
+			fmt.Fprintln(os.Stderr, "error: scaffold accepts one positional language")
+			fs.Usage()
+			os.Exit(1)
+		}
+	}
+	if *language == "" {
+		fmt.Fprintln(os.Stderr, "error: language is required")
+		fs.Usage()
+		os.Exit(1)
+	}
+
+	outputFormat, err := common.outputFormat(false)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
@@ -421,7 +416,7 @@ func runScaffold(args []string) {
 
 	result, err := scaffold.Run(&scaffold.Config{
 		Language: *language,
-		Dir:      *dir,
+		Dir:      *common.Dir,
 		Force:    *force,
 		Input:    os.Stdin,
 		Output:   os.Stderr,
@@ -442,9 +437,108 @@ func runScaffold(args []string) {
 	}
 }
 
+type globalOptions struct {
+	Dir    string
+	Format string
+}
+
+type commonFlags struct {
+	Dir    *string
+	Format *string
+	JSON   *bool
+}
+
+func addCommonFlags(fs *flag.FlagSet, defaultDir string, global globalOptions, formatUsage string) commonFlags {
+	if global.Dir != "" {
+		defaultDir = global.Dir
+	}
+	defaultFormat := global.Format
+	if defaultFormat == "" {
+		defaultFormat = "text"
+	}
+
+	dir := stringFlag(fs, "dir", "d", defaultDir, "Directory path")
+	format := stringFlag(fs, "format", "o", defaultFormat, formatUsage)
+	json := fs.Bool("json", false, "Output JSON (shorthand for --format json)")
+	return commonFlags{Dir: dir, Format: format, JSON: json}
+}
+
+func (f commonFlags) outputFormat(allowYAML bool) (cli.OutputFormat, error) {
+	format := *f.Format
+	if *f.JSON {
+		format = "json"
+	}
+	if allowYAML {
+		return cli.ParseIndexOutputFormat(format)
+	}
+	return cli.ParseOutputFormat(format)
+}
+
+func parseGlobalOptions(args []string) (globalOptions, string, []string, error) {
+	var global globalOptions
+	for i := 0; i < len(args); i++ {
+		arg := args[i]
+		switch {
+		case arg == "--dir" || arg == "-d":
+			if i+1 >= len(args) {
+				return global, "", nil, fmt.Errorf("%s requires a value", arg)
+			}
+			global.Dir = args[i+1]
+			i++
+		case strings.HasPrefix(arg, "--dir="):
+			global.Dir = strings.TrimPrefix(arg, "--dir=")
+		case strings.HasPrefix(arg, "-d="):
+			global.Dir = strings.TrimPrefix(arg, "-d=")
+		case arg == "--format" || arg == "-o":
+			if i+1 >= len(args) {
+				return global, "", nil, fmt.Errorf("%s requires a value", arg)
+			}
+			global.Format = args[i+1]
+			i++
+		case strings.HasPrefix(arg, "--format="):
+			global.Format = strings.TrimPrefix(arg, "--format=")
+		case strings.HasPrefix(arg, "-o="):
+			global.Format = strings.TrimPrefix(arg, "-o=")
+		case arg == "--json":
+			global.Format = "json"
+		case arg == "--":
+			if i+1 >= len(args) {
+				return global, "", nil, fmt.Errorf("a command is required after --")
+			}
+			return global, args[i+1], args[i+2:], nil
+		default:
+			return global, arg, args[i+1:], nil
+		}
+	}
+	return global, "", nil, nil
+}
+
 func stringFlag(fs *flag.FlagSet, name, short, value, usage string) *string {
 	result := fs.String(name, value, usage)
 	fs.StringVar(result, short, value, usage+" (short form)")
+	return result
+}
+
+type stringListValues []string
+
+func (f *stringListValues) String() string {
+	return strings.Join(*f, ",")
+}
+
+func (f *stringListValues) Set(value string) error {
+	for _, item := range strings.Split(value, ",") {
+		item = strings.TrimSpace(item)
+		if item != "" {
+			*f = append(*f, item)
+		}
+	}
+	return nil
+}
+
+func stringListFlag(fs *flag.FlagSet, name, short, usage string) *stringListValues {
+	result := &stringListValues{}
+	fs.Var(result, name, usage+" (repeatable; comma-separated)")
+	fs.Var(result, short, usage+" (short form; repeatable)")
 	return result
 }
 

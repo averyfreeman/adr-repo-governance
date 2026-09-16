@@ -7,7 +7,8 @@ Architecture decisions should not disappear into a pull request, a chat thread, 
 It is deliberately small. An architecture assistant or engineering team chooses the design; `adr` stores the decision, validates the record, and points reviewers at decisions whose scope may have been touched.
 
 Scaffolding includes standard `CLAUDE.md`, `AGENTS.md`, language guidance, and
-editable Git defaults. The scope review command is `adr detect-bs`.
+editable Git defaults. The scope review command is `adr review` (`detect-bs` is
+retained as a compatibility alias).
 
 **Git-native ADR governance for teams that want decisions to survive the sprint.**
 
@@ -16,7 +17,7 @@ editable Git defaults. The scope review command is `adr detect-bs`.
 Install from source:
 
 ~~~bash
-go install github.com/averyfreeman/adr-repo-governance/cmd/adr@v0.2.1
+go install github.com/averyfreeman/adr-repo-governance/cmd/adr@v0.3.0
 ~~~
 
 From a checkout, install into the XDG user-space layout:
@@ -53,7 +54,7 @@ Generate the default instruction files and language guidance without
 initializing Git or contacting a remote:
 
 ~~~bash
-adr scaffold --lang rust
+adr scaffold rust
 adr scaffold -l go -d ./new-project
 ~~~
 
@@ -68,14 +69,17 @@ path:
 
 ~~~bash
 adr init
-adr new --tags database,storage --paths "src/db/**,migrations/**" "Use PostgreSQL for persistence"
+adr new --tag database --tag storage --path "src/db/**" --path "migrations/**" "Use PostgreSQL for persistence"
 adr list --path "src/db/users.go"
 adr show ADR-0001
 ~~~
 
 `adr new` creates a stable ID and refreshes the generated index unless
-`--no-index` is supplied. Scope paths are deliberately explicit: they tell the
-next reviewer where a decision might matter.
+`--no-index` is supplied. `--tag`/`--path` may be repeated, and the existing
+comma-separated `--tags`/`--paths` forms remain supported. Scope paths are
+deliberately explicit: they tell the next reviewer where a decision might
+matter. Repeated tag or path filters match any requested value; status and
+other filter categories are combined with them.
 
 ![Create and query an ADR](screenshots/01-create-and-query.gif)
 
@@ -84,7 +88,7 @@ next reviewer where a decision might matter.
 Run the normal check while editing, then use strict mode in CI:
 
 ~~~bash
-adr check adr --strict
+adr check --strict
 ~~~
 
 The check covers frontmatter, required sections, and the repository’s rationale
@@ -127,11 +131,12 @@ people review in Git.
 ## Bullshit Detector
 
 The **Bullshit Detector** is the memorable name for the practical bit: run
-`adr detect-bs` when a change is ready for review.
+`adr review` when a change is ready for review. The older `detect-bs` command
+continues to work as an alias.
 
 ~~~bash
-adr detect-bs --base main
-adr detect-bs --base main --format json
+adr review
+adr review --base main --json
 ~~~
 
 It compares changed Git paths with the `scope.paths` globs on proposed and
@@ -145,17 +150,18 @@ reported ADR and inspect the implementation.
 
 | Command | Purpose |
 | --- | --- |
-| `adr init` | Create the ADR directory, template, and empty index |
+| `adr init` | Create the ADR directory, template, and generated index |
 | `adr new "Title"` | Create a numbered ADR |
 | `adr list` | List ADRs with status, tag, and scope filters |
 | `adr show <id>` | Show one ADR’s metadata, decision, and governance fields |
-| `adr check adr` | Validate ADR files |
+| `adr check` | Validate ADR files (`check adr` remains compatible) |
 | `adr index` | Generate or check the YAML index |
-| `adr detect-bs --base <ref>` | Find ADRs applicable to changed Git paths |
-| `adr scaffold --lang <name>` | Generate a language-specific project scaffold |
+| `adr review [--base <ref>]` | Find ADRs applicable to changed Git paths (`detect-bs` is an alias) |
+| `adr scaffold [<name>]` | Generate a language-specific project scaffold |
 | `adr version` | Show version and build metadata |
 
-Normal commands use `--format text` or `--format json`. `adr index` also accepts
+Normal commands use `--format text` or `--format json`; `--json` is a shorthand
+and common options can also appear before the command. `adr index` also accepts
 `--format yaml`.
 
 ## The ADR model
@@ -203,7 +209,7 @@ a new record; do not quietly rewrite the history.
 make test
 make vet
 make build
-adr check adr --strict
+adr check --strict
 adr index --check
 ~~~
 

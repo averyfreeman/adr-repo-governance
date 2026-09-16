@@ -26,7 +26,7 @@ constraints:
   - The supported Go toolchain is Go 1.26 or later
   - Source installation must be documented through go install and the Makefile
   - Scaffold generation must not perform Git, remote, or network side effects
-  - detect-bs is the canonical command name for scope applicability review
+  - review is the canonical command name for scope applicability review; detect-bs remains an alias
   - Scaffold templates must work from an installed binary without repository-relative files
 invariants:
   - Generated scaffold Git defaults remain editable in .adr-scaffold.yaml
@@ -79,9 +79,9 @@ Decision drivers:
 - Embedded templates increase the binary’s source asset set.
 - Interactive prompts require a separate non-interactive `--force` path.
 
-The CLI uses Go 1.26 or later. `detect-bs` is the only supported spelling for
-the scope review command. Tar-download installer scripts are removed; release
-archives and checksums remain GoReleaser outputs.
+The CLI uses Go 1.26 or later. `review` is the canonical scope review command;
+`detect-bs` remains a compatibility alias. Tar-download installer scripts are
+removed; release archives and checksums remain GoReleaser outputs.
 
 ## Alternatives Considered
 

@@ -8,13 +8,15 @@
 | `adr new [OPTIONS] TITLE` | Create a numbered ADR |
 | `adr list [OPTIONS]` | List ADRs with filters |
 | `adr show [OPTIONS] IDENTIFIER` | Show one ADR |
-| `adr check adr [OPTIONS]` | Validate ADR files |
+| `adr check [OPTIONS]` | Validate ADR files (`check adr` remains compatible) |
 | `adr index [OPTIONS]` | Generate or check the index |
-| `adr detect-bs --base REF [OPTIONS]` | Find decisions relevant to changed paths |
-| `adr scaffold --lang LANG [OPTIONS]` | Generate a language-specific project scaffold |
+| `adr review [--base REF] [OPTIONS]` | Find decisions relevant to changed paths (`detect-bs` is an alias) |
+| `adr scaffold [LANG] [OPTIONS]` | Generate a language-specific project scaffold |
 | `adr version` | Print version and build metadata |
 
-Put options before the positional title or identifier.
+Common `--dir`, `--format`, and `--json` options may appear before or after the
+command. Put command-specific options before the positional title or
+identifier.
 
 ## Options
 
@@ -24,16 +26,17 @@ Put options before the positional title or identifier.
 | `--dir PATH` | scaffold | Target project directory; default `.` |
 | `--format text\|json` | normal commands | Human or machine-readable output |
 | `--format text\|json\|yaml` | index | Index output format |
+| `--json` | all commands except version | Shorthand for `--format json` |
 | `--status STATUS` | new, list | Initial or filtered lifecycle status |
 | `--tag TAG` | list | Filter by tag |
-| `--path PATH` | list | Filter by scope-path match |
-| `--paths GLOBS` | new | Comma-separated scope globs |
-| `--tags TAGS` | new | Comma-separated tags |
+| `--path PATH` | list | Repeatable filter by scope-path match; comma-separated values remain supported |
+| `--paths GLOBS`, `--path GLOB` | new | Repeatable scope globs; comma-separated values remain supported |
+| `--tags TAGS`, `--tag TAG` | new | Repeatable tags; comma-separated values remain supported |
 | `--no-index` | new | Skip index refresh |
-| `--strict` | check adr | Treat warnings as failures |
+| `--strict` | check | Treat warnings as failures |
 | `--check` | index | Check freshness without writing |
-| `--base REF` | detect-bs | Required Git diff base reference |
-| `--lang LANG` | scaffold | Required language template name or alias |
+| `--base REF` | review | Git diff base reference; auto-detected when unambiguous |
+| `--lang LANG` | scaffold | Language template name or alias; may be positional |
 | `--force` | scaffold | Overwrite existing scaffold files without prompting |
 
 ## Output formats
@@ -47,9 +50,9 @@ format. YAML is reserved for the generated ADR index.
 - `new`: ADR ID, title, filename, path, and number;
 - `list`: `count` and `adrs`;
 - `show`: ADR metadata, decision, governance fields, and filename;
-- `check adr`: `valid`, `count`, per-file results, errors, and warnings;
+- `check`: `valid`, `count`, per-file results, errors, and warnings;
 - `index`: generation/check status, index path, and ADR count; and
-- `detect-bs`: `changed_files`, `applicable_adrs`, and `summary`; and
+- `review` (also `detect-bs`): `changed_files`, `applicable_adrs`, and `summary`; and
 - `scaffold`: selected language, target directory, generated files, and config path.
 
 Short aliases are available for common options: `-d` for `--dir`, `-o` for
@@ -74,7 +77,8 @@ related_adrs: []
 
 The body requires `Context`, `Decision`, `Alternatives Considered`, and
 `Consequences` headings. Strict validation also enforces the configured rationale
-pattern.
+pattern. Repeated tag or path filters are ORed within their category; status
+and other filter categories are combined with them.
 
 ## Index
 
@@ -83,17 +87,18 @@ metadata changes and `adr index --check` in CI. Do not edit it directly.
 
 ## Bullshit Detector
 
-`adr detect-bs` obtains changed paths from `git diff --name-only REF` and
-matches each proposed or adopted ADR’s `scope.paths` globs. It reports matching
+`adr review` obtains changed paths from `git diff --name-only REF` and matches
+each proposed or adopted ADR’s `scope.paths` globs. If `--base` is omitted, an
+unambiguous remote or local main ref is selected automatically. It reports matching
 ADR IDs, titles, paths, files, constraints, and invariants. Rejected, deprecated,
 and superseded records remain queryable history but do not create active signals.
 
-The command identifies decisions requiring review. It does not prove semantic
-compliance.
+`adr detect-bs` is retained as a compatibility alias. The command identifies
+decisions requiring review; it does not prove semantic compliance.
 
 ## Scaffold
 
-`adr scaffold --lang LANG` writes the default agent files, language guidance,
+`adr scaffold LANG` (or `adr scaffold --lang LANG`) writes the default agent files, language guidance,
 `.gitignore`, README, skills, and `.adr-scaffold.yaml` into the target directory.
 Supported profiles include TypeScript, JavaScript, Go, Rust, C, C++, HTML,
 Haskell, Common Lisp/CLISP, Lua, PHP, Erlang, Elixir, and generic projects.

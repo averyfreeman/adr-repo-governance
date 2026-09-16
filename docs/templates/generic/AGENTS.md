@@ -16,9 +16,9 @@ out of version control according to `.gitignore`.
 - Format: `{{.FormatCommand}}`
 - Documentation: {{.Documentation}}
 
-Before changing governed code, run `adr detect-bs --base main` and read the
-applicable decisions. Before finishing, run `adr check adr --strict` and
-`adr index --check`.
+Before changing governed code, run `adr review --base main` and read the
+applicable decisions. Before finishing, run `adr check --strict` and `adr
+index --check`.
 
 ## Git defaults
 

@@ -9,17 +9,17 @@ scope paths.
 Find decisions whose scope overlaps the planned change:
 
 ```bash
-adr detect-bs --base main
+adr review --base main
 ```
 
 Read applicable ADRs and determine whether the change requires a new decision or
-an explicit superseding ADR. `detect-bs` is a review signal; it does not prove
-semantic compliance.
+an explicit superseding ADR. `adr review` is a review signal; it does not prove
+semantic compliance. `detect-bs` remains a compatibility alias.
 
 ## Before finishing
 
 ```bash
-adr check adr --strict
+adr check --strict
 adr index --check
 make test
 make vet
@@ -34,7 +34,7 @@ Update the index with `adr index` when ADR metadata changes. Do not edit
 Create a decision with:
 
 ```bash
-adr new --tags tag1,tag2 --paths "affected/**" "Decision title"
+adr new --tag tag1 --tag tag2 --path "affected/**" "Decision title"
 ```
 
 Complete `Context`, `Decision`, `Alternatives Considered`, and `Consequences`,

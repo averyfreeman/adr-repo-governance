@@ -1,6 +1,6 @@
 # {{.DisplayName}} project
 
-This repository was scaffolded with `adr scaffold --lang {{.Language}}`.
+This repository was scaffolded with `adr scaffold {{.Language}}`.
 
 ## Development
 

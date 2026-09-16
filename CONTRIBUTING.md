@@ -11,7 +11,7 @@ CLI.
 make test
 make vet
 make build
-adr check adr --strict
+adr check --strict
 adr index --check
 ```
 
@@ -32,8 +32,8 @@ Use conventional commit subjects such as:
 ```text
 feat(cli): add ADR query filter
 fix(index): detect stale scope metadata
-docs(readme): clarify detect-bs behavior
+docs(readme): clarify review behavior
 ```
 
 Create or update an ADR when a change has long-term architectural consequences.
-Run `adr check adr --strict` and `adr index --check` before submitting a change.
+Run `adr check --strict` and `adr index --check` before submitting a change.

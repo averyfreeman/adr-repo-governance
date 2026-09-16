@@ -9,7 +9,7 @@ identifies applicable decisions but does not prove semantic code compliance.
 Install the CLI from source with Go 1.26 or later:
 
 ```bash
-go install github.com/averyfreeman/adr-repo-governance/cmd/adr@v0.2.1
+go install github.com/averyfreeman/adr-repo-governance/cmd/adr@v0.3.0
 ```
 
 The demo intentionally has no tar-download installer scripts.
@@ -17,13 +17,13 @@ The demo intentionally has no tar-download installer scripts.
 Before and after significant changes, validate the ADR set:
 
 ```bash
-adr check adr --dir docs/adr --strict
+adr check --dir docs/adr --strict
 ```
 
 When source files change, inspect applicable decisions with:
 
 ```bash
-adr detect-bs --dir docs/adr --base origin/main
+adr review --dir docs/adr --base origin/main
 ```
 
 Read the matching ADRs before changing governed code. Treat their constraints
@@ -37,10 +37,10 @@ adr list --dir docs/adr
 adr show --dir docs/adr ADR-0001
 adr list --dir docs/adr --path "src/db/users.go"
 adr list --dir docs/adr --tag database
-adr new --dir docs/adr --tags tag1,tag2 --paths "affected/**" "Your Decision Title"
+adr new --dir docs/adr --tag tag1 --tag tag2 --path "affected/**" "Your Decision Title"
 adr index --dir docs/adr
 adr index --dir docs/adr --check
-adr scaffold --lang rust --dir /tmp/adr-rust-example
+adr scaffold --dir /tmp/adr-rust-example rust
 ```
 
 JSON is the integration format:

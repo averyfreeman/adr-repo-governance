@@ -8,11 +8,12 @@ decisions before a change and reviewing them afterward.
 ~~~bash
 adr list --format json
 adr show --format json ADR-0001
-adr detect-bs --base main --format json
+adr review --base main --json
 ~~~
 
 Use `list` for discovery, `show` for the full decision context, and
-`detect-bs` for path-scoped review context. Detector results include:
+`review` for path-scoped review context. (`detect-bs` remains an alias.) Review
+results include:
 
 - `changed_files`;
 - `applicable_adrs`;
@@ -25,8 +26,8 @@ match is a prompt to review, not proof of a violation.
 ## After implementation
 
 ~~~bash
-adr detect-bs --base main --format json
-adr check adr --strict
+adr review --base main --json
+adr check --strict
 adr index --check
 ~~~
 

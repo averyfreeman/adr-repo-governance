@@ -46,8 +46,9 @@ superseded_by: []
 related_adrs: []
 ~~~
 
-Scope paths are globs used by `adr detect-bs`. Keep them narrow enough to
-identify the code that genuinely deserves review.
+Scope paths are globs used by `adr review` (`detect-bs` is a compatibility
+alias). Keep them narrow enough to identify the code that genuinely deserves
+review.
 
 ## Constraints and invariants
 
@@ -74,7 +75,7 @@ When a decision changes, create a new ADR and connect both records:
 
 ~~~bash
 adr new --paths "src/db/**" "Replace the persistence boundary"
-adr check adr --strict
+adr check --strict
 adr index
 ~~~
 

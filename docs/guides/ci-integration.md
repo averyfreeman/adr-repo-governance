@@ -7,9 +7,9 @@ decisions that deserve review.
 
 ~~~bash
 go build ./cmd/adr
-adr check adr --strict
+adr check --strict
 adr index --check
-adr detect-bs --base origin/main --format json
+adr review --base origin/main --json
 ~~~
 
 The first two checks validate the records. The index check verifies committed
@@ -32,7 +32,7 @@ jobs:
         with:
           go-version-file: go.mod
       - run: go build -o adr ./cmd/adr
-      - run: ./adr check adr --strict
+      - run: ./adr check --strict
       - run: ./adr index --check
 ~~~
 

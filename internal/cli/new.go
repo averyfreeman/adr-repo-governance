@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -80,7 +81,7 @@ func RunNew(cfg *NewConfig) (*NewResult, error) {
 	}
 
 	// Generate content
-	content, err := generateADRContent(fm, cfg.Title)
+	content, err := generateADRContent(cfg.Dir, filename, fm)
 	if err != nil {
 		return nil, fmt.Errorf("generating ADR content: %w", err)
 	}
@@ -124,64 +125,39 @@ func RunNew(cfg *NewConfig) (*NewResult, error) {
 	return result, nil
 }
 
-func generateADRContent(fm *adr.Frontmatter, title string) (string, error) {
-	fmStr, err := adr.SerializeFrontmatter(fm)
+func generateADRContent(adrDir, filename string, fm *adr.Frontmatter) (string, error) {
+	templatePath := filepath.Join(adrDir, "templates", "adr.md")
+	templateContent, err := os.ReadFile(templatePath)
 	if err != nil {
-		return "", err
+		if !errors.Is(err, os.ErrNotExist) {
+			return "", fmt.Errorf("reading ADR template: %w", err)
+		}
+		templateContent = []byte(defaultTemplate)
 	}
 
-	body := fmt.Sprintf(`
-# %s: %s
+	_, body, err := adr.ExtractFrontmatter(string(templateContent))
+	if err != nil {
+		return "", fmt.Errorf("parsing ADR template: %w", err)
+	}
 
-## Context
+	body = strings.ReplaceAll(body, "ADR-NNNN", fm.ADRID)
+	body = strings.ReplaceAll(body, "Your Decision Title Here", fm.Title)
+	body = strings.ReplaceAll(body, "YYYY-MM-DD", fm.Date)
 
-_Describe the context and background that led to this decision. What problem are we solving? What forces are at play?_
+	fmStr, err := adr.SerializeFrontmatter(fm)
+	if err != nil {
+		return "", fmt.Errorf("serializing frontmatter: %w", err)
+	}
 
-Decision drivers:
-- _Key driver 1 that influenced the decision_
-- _Key driver 2_
-- _Key driver 3_
+	content := fmStr + strings.TrimLeft(body, "\n")
+	parsed, err := adr.ParseADR(content, filename, filepath.Join(adrDir, filename))
+	if err != nil {
+		return "", fmt.Errorf("validating rendered ADR: %w", err)
+	}
+	validation := adr.Validate(parsed)
+	if !validation.IsValid() {
+		return "", fmt.Errorf("rendered ADR is invalid: %s", validation.Errors[0].Message)
+	}
 
-## Decision
-
-_State the decision clearly and concisely._
-
-### [Chosen Option]: Adopted
-
-**Adopted because:**
-- _Clear, concrete reason why this option was chosen_
-- _Tie reasons to decision drivers above_
-- _Technical, operational, or strategic justification_
-
-**Adopted despite:**
-- _Known downside or trade-off we consciously accepted_
-- _Cost or weakness compared to alternatives_
-- _Risk we are taking on_
-
-## Alternatives Considered
-
-### [Alternative A]: Rejected
-
-**Rejected because:**
-- _Clear, concrete reason why this option was not chosen_
-- _Technical, organizational, or strategic reason_
-- _How it failed to meet decision drivers_
-
-**Rejected despite:**
-- _Legitimate strength of this option_
-- _Benefit that made it attractive_
-- _Reason it was seriously considered_
-
-## Consequences
-
-**Positive:**
-- _First positive consequence_
-- _Second positive consequence_
-
-**Negative:**
-- _First negative consequence (and mitigation if any)_
-- _Second negative consequence_
-`, fm.ADRID, title)
-
-	return fmStr + strings.TrimPrefix(body, "\n"), nil
+	return content, nil
 }

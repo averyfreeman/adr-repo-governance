@@ -8,7 +8,7 @@ Architecture Decision Records.
 Install from source with Go 1.26 or later:
 
 ~~~bash
-go install github.com/averyfreeman/adr-repo-governance/cmd/adr@v0.2.1
+go install github.com/averyfreeman/adr-repo-governance/cmd/adr@v0.3.0
 adr version
 ~~~
 
@@ -32,8 +32,8 @@ does not ship tar-download installer scripts.
 Generate the standard agent files, language guidance, and editable Git policy:
 
 ~~~bash
-adr scaffold --lang rust
-adr scaffold -l go -d ./new-project
+adr scaffold rust
+adr scaffold --lang go --dir ./new-project
 ~~~
 
 Scaffolding only writes local files. It does not initialize Git, create a
@@ -52,7 +52,7 @@ Use `--dir PATH` when the repository keeps its records elsewhere.
 ## Create a decision
 
 ~~~bash
-adr new --tags database --paths "src/db/**" "Use PostgreSQL for persistence"
+adr new --tag database --path "src/db/**" "Use PostgreSQL for persistence"
 ~~~
 
 Finish the generated `Context`, `Decision`, `Alternatives Considered`, and
@@ -62,7 +62,7 @@ to guide later implementation.
 ## Validate and index
 
 ~~~bash
-adr check adr --strict
+adr check --strict
 adr index
 adr index --check
 ~~~
@@ -73,12 +73,13 @@ The strict check validates every ADR. `adr index` regenerates derived metadata;
 ## Review a change
 
 ~~~bash
-adr detect-bs --base main
-adr detect-bs --base main --format json
+adr review
+adr review --base main --json
 ~~~
 
 The Bullshit Detector compares changed Git paths with the scopes on proposed and
-adopted ADRs. A match tells you what to read; it is not a semantic compliance
+adopted ADRs. The base is auto-detected when unambiguous, or can be supplied
+explicitly. A match tells you what to read; it is not a semantic compliance
 verdict.
 
 ## A few useful queries

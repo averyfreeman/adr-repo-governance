@@ -79,7 +79,7 @@ Steps:
 3. Run `go test ./...`
 4. Run `golangci-lint`
 5. Build CLI: `go build ./cmd/adr`
-6. Run `adr check adr` to validate ADRs
+6. Run `adr check` to validate ADRs
 
 ### Release Pipeline (release.yml)
 

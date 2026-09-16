@@ -17,11 +17,11 @@ This directory contains the architectural decisions for `adr-rg` itself.
 ## Working with ADRs
 
 ```bash
-adr new --tags tooling --paths "internal/**" "Decision title"
-adr check adr --strict
+adr new --tag tooling --path "internal/**" "Decision title"
+adr check --strict
 adr index
-adr detect-bs --base main
-adr scaffold --lang rust
+adr review --base main
+adr scaffold rust
 ```
 
 `index.yaml` is generated; use `adr index` rather than editing it manually. ADR
@@ -31,4 +31,4 @@ retained decisions remain queryable through the generated index.
 
 Every ADR contains `Context`, `Decision`, `Alternatives Considered`, and
 `Consequences`. Frontmatter may additionally declare constraints, invariants, and
-scope paths used by `detect-bs`.
+scope paths used by `adr review` (`detect-bs` remains a compatibility alias).

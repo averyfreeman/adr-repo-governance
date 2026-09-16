@@ -11,7 +11,7 @@ import (
 	"github.com/averyfreeman/adr-repo-governance/internal/validate"
 )
 
-// CheckADRConfig holds configuration for the check adr command.
+// CheckADRConfig holds configuration for the check command.
 type CheckADRConfig struct {
 	Dir    string
 	Strict bool
@@ -19,7 +19,7 @@ type CheckADRConfig struct {
 	Output *Output
 }
 
-// CheckADRResult holds the result of the check adr command.
+// CheckADRResult holds the result of the check command.
 type CheckADRResult struct {
 	Valid    bool                 `json:"valid"`
 	Count    int                  `json:"count"`
@@ -137,7 +137,7 @@ func RunCheckADR(cfg *CheckADRConfig) (*CheckADRResult, error) {
 	return result, nil
 }
 
-// DetectBSConfig holds configuration for the detect-bs command.
+// DetectBSConfig holds configuration for the review command.
 type DetectBSConfig struct {
 	Dir    string
 	Base   string
@@ -145,7 +145,7 @@ type DetectBSConfig struct {
 	Output *Output
 }
 
-// DetectBSResult holds the result of the detect-bs command.
+// DetectBSResult holds the result of the review command.
 type DetectBSResult struct {
 	ChangedFiles   []string           `json:"changed_files"`
 	ApplicableADRs []ApplicableADR    `json:"applicable_adrs"`
@@ -284,6 +284,38 @@ func isReviewableStatus(status adr.Status) bool {
 	default:
 		return false
 	}
+}
+
+// DefaultBaseRef returns the highest-priority unambiguous Git base reference.
+// An empty result means that no suitable base exists or valid candidates point
+// at different commits.
+func DefaultBaseRef() string {
+	candidates := []string{"origin/HEAD", "origin/main", "main"}
+	var resolvedCommit string
+	var resolvedRef string
+
+	for _, candidate := range candidates {
+		cmd := exec.Command("git", "rev-parse", "--verify", "--quiet", candidate+"^{commit}")
+		output, err := cmd.Output()
+		if err != nil {
+			continue
+		}
+
+		commit := strings.TrimSpace(string(output))
+		if commit == "" {
+			continue
+		}
+		if resolvedCommit == "" {
+			resolvedCommit = commit
+			resolvedRef = candidate
+			continue
+		}
+		if commit != resolvedCommit {
+			return ""
+		}
+	}
+
+	return resolvedRef
 }
 
 func getChangedFiles(base string) ([]string, error) {

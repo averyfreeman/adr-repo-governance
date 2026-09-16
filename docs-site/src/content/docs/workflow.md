@@ -7,7 +7,7 @@ description: The day-to-day workflow for creating and validating ADRs.
 
 ```bash
 adr init
-adr new --tags database,storage --paths "src/db/**,migrations/**" "Use PostgreSQL for persistence"
+adr new --tag database --tag storage --path "src/db/**" --path "migrations/**" "Use PostgreSQL for persistence"
 ```
 
 ADRs live in `docs/adr/` by default. Scope paths tell reviewers which decisions may matter for a code change.
@@ -15,7 +15,7 @@ ADRs live in `docs/adr/` by default. Scope paths tell reviewers which decisions 
 ## Review applicable decisions
 
 ```bash
-adr bs-detector --base main
+adr review --base main
 adr list --path "src/db/users.go"
 adr show ADR-0001
 ```
@@ -25,7 +25,7 @@ The detector is a review queue based on scope globs, not a semantic proof that t
 ## Validate and index
 
 ```bash
-adr check adr --strict
+adr check --strict
 adr index --check
 ```
 

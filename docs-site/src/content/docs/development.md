@@ -8,8 +8,8 @@ The repository requires Go for local development. Run the focused checks before 
 ```bash
 go test ./...
 go vet ./...
-adr check adr --strict
+adr check --strict
 adr index --check
 ```
 
-Run `adr bs-detector --base main` before source changes when reviewing a branch. Do not edit the generated index by hand.
+Run `adr review --base main` before source changes when reviewing a branch. Do not edit the generated index by hand.
