@@ -17,7 +17,7 @@ This directory contains the architectural decisions for `adr-rg` itself.
 ## Working with ADRs
 
 ```bash
-adr new --tag tooling --path "internal/**" "Decision title"
+adr new --lang go --tag tooling --path "internal/**" "Decision title"
 adr check --strict
 adr index
 adr review --base main

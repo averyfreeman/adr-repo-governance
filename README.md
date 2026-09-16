@@ -69,7 +69,7 @@ path:
 
 ~~~bash
 adr init
-adr new --tag database --tag storage --path "src/db/**" --path "migrations/**" "Use PostgreSQL for persistence"
+adr new --lang go --tag database --tag storage --path "src/db/**" --path "migrations/**" "Use PostgreSQL for persistence"
 adr list --path "src/db/users.go"
 adr show ADR-0001
 ~~~
@@ -80,6 +80,11 @@ comma-separated `--tags`/`--paths` forms remain supported. Scope paths are
 deliberately explicit: they tell the next reviewer where a decision might
 matter. Repeated tag or path filters match any requested value; status and
 other filter categories are combined with them.
+
+Language context is opt-in: omit `--lang` for the language-neutral `generic`
+profile, or pass a canonical language name or alias such as `--lang go` or
+`--lang rs`. The selected profile adds build, test, formatting, and
+documentation conventions to the new ADR body.
 
 ![Create and query an ADR](screenshots/01-create-and-query.gif)
 

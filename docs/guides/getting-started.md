@@ -52,8 +52,12 @@ Use `--dir PATH` when the repository keeps its records elsewhere.
 ## Create a decision
 
 ~~~bash
-adr new --tag database --path "src/db/**" "Use PostgreSQL for persistence"
+adr new --lang go --tag database --path "src/db/**" "Use PostgreSQL for persistence"
 ~~~
+
+Use `--lang LANG` with a canonical language name or alias to add the selected
+profile’s build, test, formatting, and documentation conventions to the ADR.
+Omit it to create the language-neutral `generic` ADR template.
 
 Finish the generated `Context`, `Decision`, `Alternatives Considered`, and
 `Consequences` sections. Add constraints and invariants when the decision needs

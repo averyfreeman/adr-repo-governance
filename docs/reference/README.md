@@ -32,6 +32,7 @@ identifier.
 | `--path PATH` | list | Repeatable filter by scope-path match; comma-separated values remain supported |
 | `--paths GLOBS`, `--path GLOB` | new | Repeatable scope globs; comma-separated values remain supported |
 | `--tags TAGS`, `--tag TAG` | new | Repeatable tags; comma-separated values remain supported |
+| `--lang LANG` | new | Optional language profile or alias for the ADR context |
 | `--no-index` | new | Skip index refresh |
 | `--strict` | check | Treat warnings as failures |
 | `--check` | index | Check freshness without writing |
@@ -47,7 +48,7 @@ format. YAML is reserved for the generated ADR index.
 ## JSON result shapes
 
 - `init`: `adr_dir`, `template`, and `index`;
-- `new`: ADR ID, title, filename, path, and number;
+- `new`: ADR ID, title, filename, path, number, and resolved canonical language;
 - `list`: `count` and `adrs`;
 - `show`: ADR metadata, decision, governance fields, and filename;
 - `check`: `valid`, `count`, per-file results, errors, and warnings;
@@ -106,3 +107,11 @@ Haskell, Common Lisp/CLISP, Lua, PHP, Erlang, Elixir, and generic projects.
 Scaffolding performs no Git or network actions. Existing files are handled by an
 interactive overwrite, skip, rename, or alternate-path prompt. Use `--force` to
 overwrite all collisions without prompting.
+
+## Language-aware ADRs
+
+`adr new` uses the language-neutral `generic` profile when `--lang` is omitted.
+Pass a canonical profile or alias to add an opt-in `Language Context` section to
+the ADR body, for example `adr new --lang go "Use Go for the service"` or
+`adr new --lang rs "Use Rust for the service"`. Existing local templates remain
+compatible; templates without the opt-in block are rendered as before.

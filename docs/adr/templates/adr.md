@@ -30,6 +30,16 @@ Decision drivers:
 - Key driver 2
 - Key driver 3
 
+{{ if .Language }}
+## Language Context
+
+- Language: {{ .DisplayName }}
+- Build: {{ .BuildCommand }}
+- Test: {{ .TestCommand }}
+- Format: {{ .FormatCommand }}
+- Documentation: {{ .Documentation }}
+{{ end }}
+
 ## Decision
 
 State the decision clearly and concisely.

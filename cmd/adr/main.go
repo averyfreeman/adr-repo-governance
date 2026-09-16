@@ -125,6 +125,7 @@ func runInit(args []string, global globalOptions) {
 func runNew(args []string, global globalOptions) {
 	fs := flag.NewFlagSet("new", flag.ExitOnError)
 	common := addCommonFlags(fs, defaultADRDir, global, "Output format (text|json)")
+	language := stringFlag(fs, "lang", "l", "", "Language profile or alias (optional)")
 	tags := stringListFlag(fs, "tags", "t", "Tags")
 	fs.Var(tags, "tag", "Alias for --tags")
 	paths := stringListFlag(fs, "paths", "p", "Scope paths (globs)")
@@ -161,14 +162,15 @@ func runNew(args []string, global globalOptions) {
 	}
 
 	cfg := &cli.NewConfig{
-		Title:   title,
-		Dir:     *common.Dir,
-		Tags:    []string(*tags),
-		Paths:   []string(*paths),
-		Status:  *status,
-		NoIndex: *noIndex,
-		Format:  outputFormat,
-		Output:  cli.NewOutput(outputFormat),
+		Title:    title,
+		Dir:      *common.Dir,
+		Tags:     []string(*tags),
+		Paths:    []string(*paths),
+		Status:   *status,
+		Language: *language,
+		NoIndex:  *noIndex,
+		Format:   outputFormat,
+		Output:   cli.NewOutput(outputFormat),
 	}
 
 	if _, err := cli.RunNew(cfg); err != nil {

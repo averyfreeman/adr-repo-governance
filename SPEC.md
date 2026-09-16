@@ -103,6 +103,10 @@ target directory. JSON output contains adr_dir, template, and index paths.
 Creates the next numbered ADR with status proposed by default from the
 initialized templates/adr.md when available, falling back to the embedded
 template otherwise. It refreshes the index unless --no-index is provided.
+Language context is opt-in: without `--lang`, the generic profile is resolved
+but its context section is omitted; with `--lang LANG`, the canonical language
+profile contributes display name, build, test, format, and documentation
+conventions to the ADR body.
 
 | Option | Meaning |
 | --- | --- |
@@ -110,8 +114,15 @@ template otherwise. It refreshes the index unless --no-index is provided.
 | --tags TAGS, --tag TAG | Repeatable tags; comma-separated values remain supported |
 | --paths GLOBS, --path GLOB | Repeatable scope globs; comma-separated values remain supported |
 | --status STATUS | Initial lifecycle status |
+| --lang LANG | Optional language profile or alias for the ADR context |
 | --no-index | Do not refresh the generated index |
 | --format text\|json | Output format |
+
+Supported canonical profiles are `c`, `cpp`, `elixir`, `erlang`, `generic`,
+`go`, `haskell`, `html`, `javascript`, `lisp`, `lua`, `php`, `rust`, and
+`typescript`. Text-mode creation without `--lang` prints a discoverability
+notice; structured output remains JSON-only and includes the resolved canonical
+language.
 
 ### adr scaffold
 

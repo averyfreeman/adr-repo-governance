@@ -53,9 +53,9 @@ const (
 )
 
 type catalog struct {
-	Version   int                       `yaml:"version"`
-	Git       gitDefaults               `yaml:"git"`
-	Languages map[string]languageConfig `yaml:"languages"`
+	Version   int                        `yaml:"version"`
+	Git       gitDefaults                `yaml:"git"`
+	Languages map[string]LanguageProfile `yaml:"languages"`
 }
 
 type gitDefaults struct {
@@ -70,7 +70,8 @@ type gitDefaults struct {
 	CreateRemote bool   `yaml:"create_remote"`
 }
 
-type languageConfig struct {
+// LanguageProfile describes a canonical language profile from the scaffold catalog.
+type LanguageProfile struct {
 	DisplayName      string   `yaml:"display_name"`
 	Aliases          []string `yaml:"aliases"`
 	Template         string   `yaml:"template"`
@@ -82,7 +83,8 @@ type languageConfig struct {
 	IgnorePatterns   []string `yaml:"ignore_patterns"`
 }
 
-type templateData struct {
+// TemplateData is the shared data available to scaffold and ADR templates.
+type TemplateData struct {
 	Language         string
 	DisplayName      string
 	BuildCommand     string
@@ -150,7 +152,7 @@ func Run(cfg *Config) (*Result, error) {
 	if cfg == nil {
 		return nil, errors.New("scaffold configuration is required")
 	}
-	language, profile, err := resolveLanguage(cfg.Language)
+	language, profile, err := ResolveLanguage(cfg.Language)
 	if err != nil {
 		return nil, err
 	}
@@ -167,16 +169,7 @@ func Run(cfg *Config) (*Result, error) {
 		input = os.Stdin
 	}
 
-	data := templateData{
-		Language:         language,
-		DisplayName:      profile.DisplayName,
-		BuildCommand:     nonEmpty(profile.Build, "not defined"),
-		TestCommand:      nonEmpty(profile.Test, "not defined"),
-		FormatCommand:    nonEmpty(profile.Format, "not defined"),
-		Documentation:    profile.Documentation,
-		IgnorePatterns:   profile.IgnorePatterns,
-		SourceExtensions: profile.SourceExtensions,
-	}
+	data := NewTemplateData(language, profile)
 
 	files, err := renderFiles(profile.Template, data)
 	if err != nil {
@@ -212,23 +205,51 @@ func Run(cfg *Config) (*Result, error) {
 	return result, nil
 }
 
-func resolveLanguage(name string) (string, languageConfig, error) {
+// ResolveLanguage resolves a canonical language name or alias from the catalog.
+func ResolveLanguage(name string) (string, LanguageProfile, error) {
 	if catalogErr != nil {
-		return "", languageConfig{}, catalogErr
+		return "", LanguageProfile{}, catalogErr
 	}
 	needle := strings.ToLower(strings.TrimSpace(name))
 	if needle == "" {
-		return "", languageConfig{}, fmt.Errorf("language is required; choose one of: %s", strings.Join(Languages(), ", "))
+		return "", LanguageProfile{}, fmt.Errorf("language is required; choose one of: %s", strings.Join(Languages(), ", "))
 	}
 	for language, profile := range catalogData.Languages {
 		if needle == language || containsFold(profile.Aliases, needle) {
 			return language, profile, nil
 		}
 	}
-	return "", languageConfig{}, fmt.Errorf("unknown language %q; choose one of: %s", name, strings.Join(Languages(), ", "))
+	return "", LanguageProfile{}, fmt.Errorf("unknown language %q; choose one of: %s", name, strings.Join(Languages(), ", "))
 }
 
-func renderFiles(templateName string, data templateData) ([]generatedFile, error) {
+// NewTemplateData builds shared template data for a resolved profile.
+func NewTemplateData(language string, profile LanguageProfile) TemplateData {
+	return TemplateData{
+		Language:         language,
+		DisplayName:      profile.DisplayName,
+		BuildCommand:     nonEmpty(profile.Build, "not defined"),
+		TestCommand:      nonEmpty(profile.Test, "not defined"),
+		FormatCommand:    nonEmpty(profile.Format, "not defined"),
+		Documentation:    profile.Documentation,
+		IgnorePatterns:   profile.IgnorePatterns,
+		SourceExtensions: profile.SourceExtensions,
+	}
+}
+
+// RenderTemplate renders a template with the shared language-aware data.
+func RenderTemplate(name, source string, data TemplateData) (string, error) {
+	rendered, err := template.New(name).Option("missingkey=error").Parse(source)
+	if err != nil {
+		return "", err
+	}
+	var buffer strings.Builder
+	if err := rendered.Execute(&buffer, data); err != nil {
+		return "", err
+	}
+	return buffer.String(), nil
+}
+
+func renderFiles(templateName string, data TemplateData) ([]generatedFile, error) {
 	files := []struct {
 		source string
 		output string
@@ -265,15 +286,11 @@ func renderFiles(templateName string, data templateData) ([]generatedFile, error
 		if content == nil {
 			return nil, fmt.Errorf("read scaffold template %s", assetPath)
 		}
-		rendered, err := template.New(file.source).Option("missingkey=error").Parse(string(content))
+		rendered, err := RenderTemplate(file.source, string(content), data)
 		if err != nil {
-			return nil, fmt.Errorf("parse scaffold template %s: %w", assetPath, err)
-		}
-		var buffer strings.Builder
-		if err := rendered.Execute(&buffer, data); err != nil {
 			return nil, fmt.Errorf("render scaffold template %s: %w", assetPath, err)
 		}
-		result = append(result, generatedFile{RelativePath: file.output, Content: []byte(buffer.String())})
+		result = append(result, generatedFile{RelativePath: file.output, Content: []byte(rendered)})
 	}
 	return result, nil
 }
