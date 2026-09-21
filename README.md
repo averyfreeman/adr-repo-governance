@@ -1,3 +1,7 @@
+I realized this project aligned perfectly with Matt Popock's famous set of 39 extremely well-developed, painstakingly developed skills, the most prolific of which is named "grill-me", which sets up ADR docs based on a back-and-forth Q&A between agent and developer at the outset of a project. So, rather than try and re-invent the wheel, I rolled this project morphed into "Git-BBQ", which is an ADR scaffolding tool that bootstraps new projects and refreshes old ones alike, with clear specifications that can either be auto-selected by the agent (with acceptance gate and individual selection), or hashed out one-by-one "grill me" style (just start in Plan Mode), and 5 lifecycle hooks to ensure specifications are built properly and followed end to end. 
+
+Therefore, I am archiving this project. Check out my Git-BBQ project, I really can't recommend it enough.
+
 # ADR - RG
 
 ### A CLI for scaffolding agent-centric repositories and governing architecture decisions.
